@@ -3,8 +3,17 @@ package com.example.showmemovies
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,14 +25,21 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContent {
-            MyApp()
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                MyApp()
+            }
         }
     }
 }
 
+@Preview(showBackground = true, name = "Text preview")
 @Composable
 fun Profile() {
-    Text("Profile")
+    Box(modifier = Modifier.fillMaxWidth().fillMaxHeight().background(Color.Red)){
+        Text( text = "Profile")
+    }
 }
 
 

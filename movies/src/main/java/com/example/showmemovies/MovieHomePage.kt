@@ -17,11 +17,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-@Preview(showBackground = true, name = "Text preview")
 @Composable
-fun MovieHomePage() {
+fun MovieHomePage(state: MovieHomePageUiState) {
+    println(state)
     HomeScreen()
 }
+
 
 
 @Composable

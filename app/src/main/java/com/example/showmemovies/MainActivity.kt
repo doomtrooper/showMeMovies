@@ -12,9 +12,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.showmemovies.repository.ITrendingMoviesRepository
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /*
 * Once Hilt is set up in your Application class and an application-level component is available,
@@ -22,16 +20,12 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-//    @Inject lateinit var repository: ITrendingMoviesRepository
-
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContent {
             MyApp()
         }
-//        println(repository.toString())
     }
 }
 

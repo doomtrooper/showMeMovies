@@ -5,19 +5,23 @@ import androidx.lifecycle.viewModelScope
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MovieHomePageViewModel @Inject constructor(repository: ITrendingMoviesRepository): ViewModel() {
+class MovieHomePageViewModel @Inject constructor(repository: ITrendingMoviesRepository) :
+    ViewModel() {
     // Expose screen UI state
-    private val _uiState = MutableStateFlow(MovieHomePageUiState())
-    val uiState: StateFlow<MovieHomePageUiState> = _uiState.asStateFlow()
+    var uiState = MutableStateFlow(MovieHomePageUiState())
+
     init {
         viewModelScope.launch {
-            repository.fetchTrendingMovies()
+            val (page, movieList, totalPages, totalResults) = repository.fetchTrendingMovies()
+            println(movieList)
+            uiState.update {
+                uiState.value.copy(trendingMovies = movieList)
+            }
         }
     }
 }

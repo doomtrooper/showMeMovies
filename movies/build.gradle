@@ -43,13 +43,16 @@ android {
 dependencies {
 
     implementation project(':data')
+    def mockkVersion = "1.13.10"
 
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-
+    // Optional -- Mockito framework
+    testImplementation "io.mockk:mockk:$mockkVersion"
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1'
     def compose_version = "1.6.2"
 
     /**
@@ -64,6 +67,7 @@ dependencies {
     // and extend foundation to build your own design system pieces.
     implementation "androidx.compose.foundation:foundation:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview-android:$compose_version"
+    // ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0"
 
     //hilt

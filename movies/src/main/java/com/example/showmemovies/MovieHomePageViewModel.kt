@@ -16,11 +16,15 @@ class MovieHomePageViewModel @Inject constructor(repository: ITrendingMoviesRepo
     var uiState = MutableStateFlow(MovieHomePageUiState())
 
     init {
+        uiState.value
         viewModelScope.launch {
+            uiState.update {
+                uiState.value.copy(loading = true)
+            }
             val (page, movieList, totalPages, totalResults) = repository.fetchTrendingMovies()
             println(movieList)
             uiState.update {
-                uiState.value.copy(trendingMovies = movieList)
+                uiState.value.copy(trendingMovies = movieList, loading = false)
             }
         }
     }

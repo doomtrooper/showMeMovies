@@ -2,6 +2,7 @@ package com.example.showmemovies
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.showmemovies.NetworkResponseWrapper.*
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,16 +17,45 @@ class MovieHomePageViewModel @Inject constructor(repository: ITrendingMoviesRepo
     var uiState = MutableStateFlow(MovieHomePageUiState())
 
     init {
-        uiState.value
         viewModelScope.launch {
             uiState.update {
                 uiState.value.copy(loading = true)
             }
-            val (page, movieList, totalPages, totalResults) = repository.fetchTrendingMovies()
-            println(movieList)
-            uiState.update {
-                uiState.value.copy(trendingMovies = movieList, loading = false)
+            val fetchTrendingMovies = repository.fetchTrendingMovies()
+            println(fetchTrendingMovies)
+            when (fetchTrendingMovies) {
+                is Success -> uiState.update {
+                    uiState.value.copy(
+                        trendingMovies = fetchTrendingMovies.body.movieList,
+                        loading = false
+                    )
+                }
+
+                is NetworkError -> uiState.update {
+                    uiState.value.copy(
+                        error = true,
+                        loading = false,
+                        errorWrapper = ErrorWrapper(t = fetchTrendingMovies.t)
+                    )
+                }
+
+                is ServiceError -> uiState.update {
+                    uiState.value.copy(
+                        error = true,
+                        loading = false,
+                        errorWrapper = ErrorWrapper(serviceErrorBody = fetchTrendingMovies.errorBody)
+                    )
+                }
+
+                is UnknownError -> uiState.update {
+                    uiState.value.copy(
+                        error = true,
+                        loading = false,
+                        errorWrapper = ErrorWrapper(t = fetchTrendingMovies.t)
+                    )
+                }
             }
+
         }
     }
 }

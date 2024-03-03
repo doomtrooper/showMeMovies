@@ -1,5 +1,7 @@
 package com.example.showmemovies
 
+import com.example.showmemovies.NetworkResponseWrapper.Success
+import com.example.showmemovies.models.MovieModel
 import com.example.showmemovies.models.TrendingMoviesResponse
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import io.mockk.MockKAnnotations
@@ -28,12 +30,12 @@ class MovieHomePageViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        MockKAnnotations.init(this, relaxUnitFun = true)
+        MockKAnnotations.init(this)
     }
 
     @Test
-    fun calculateAddsValues1() {
-        coEvery { repository.fetchTrendingMovies() } returns data
+    fun `should return non null list when api fetch trending movies is success`() {
+        coEvery { repository.fetchTrendingMovies() } returns Success(data)
         val homePageViewModel = MovieHomePageViewModel(repository)
         coVerify {
             repository.fetchTrendingMovies()

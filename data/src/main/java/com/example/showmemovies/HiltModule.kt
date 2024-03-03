@@ -41,8 +41,9 @@ class HiltModule {
     @Provides
     fun provideRetrofitInstance(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
         .baseUrl("https://api.themoviedb.org")
-        .client(okHttpClient)
         .addConverterFactory(MoshiConverterFactory.create())
+        .addCallAdapterFactory(NetworkResponseWrapperCallAdapterFactory())
+        .client(okHttpClient)
         .build()
 
     @Provides

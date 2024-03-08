@@ -10,6 +10,6 @@ data class MovieHomePageUiState(
 )
 
 data class ErrorWrapper(
-    private val t: Throwable? = null,
-    private val serviceErrorBody: ErrorBody? = null
+    val t: Throwable? = null,
+    val serviceErrorBody: ErrorBody? = null
 )

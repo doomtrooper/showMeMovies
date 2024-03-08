@@ -80,4 +80,6 @@ dependencies {
     //hilt
     implementation("com.google.dagger:hilt-android:2.48")
     kapt "com.google.dagger:hilt-compiler:2.48"
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-1'
 }

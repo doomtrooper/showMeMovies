@@ -4,9 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
@@ -42,7 +45,8 @@ fun MyApp() {
 fun NavGraphBuilder.homePage() {
     composable(route = "movies") {
         val homePageViewModel: MovieHomePageViewModel = hiltViewModel<MovieHomePageViewModel>()
-        val state by homePageViewModel.uiState.collectAsStateWithLifecycle()
+        LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+        val state by homePageViewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = LocalLifecycleOwner.current)
         MovieHomePage(state)
     }
 }

@@ -1,6 +1,6 @@
 package com.example.showmemovies
 
-import com.example.showmemovies.NetworkResponseWrapper.Success
+import com.example.showmemovies.NetworkResponseWrapper.*
 import com.example.showmemovies.models.MovieModel
 import com.example.showmemovies.models.TrendingMoviesResponse
 import com.example.showmemovies.repository.ITrendingMoviesRepository
@@ -22,8 +22,10 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class MovieHomePageViewModelTest {
 
-    private val data = TrendingMoviesResponse(totalPages = 0, totalResults = 0, page = 0L, movieList = listOf())
+    private val data =
+        TrendingMoviesResponse(totalPages = 0, totalResults = 0, page = 0L, movieList = listOf())
     private val dispatcher: TestDispatcher = UnconfinedTestDispatcher()
+
     @MockK
     lateinit var repository: ITrendingMoviesRepository
 
@@ -42,6 +44,23 @@ class MovieHomePageViewModelTest {
         }
         assert(!homePageViewModel.uiState.value.loading)
     }
+
+    @Test
+    fun `should return error when api fetch trending movies is failure`() {
+        coEvery { repository.fetchTrendingMovies() } returns ServiceError(errorBody())
+        val homePageViewModel = MovieHomePageViewModel(repository)
+        coVerify {
+            repository.fetchTrendingMovies()
+        }
+        assert(!homePageViewModel.uiState.value.loading)
+        assert(homePageViewModel.uiState.value.error)
+        assert(
+            homePageViewModel.uiState.value.errorWrapper?.serviceErrorBody?.equals(errorBody())
+                ?: false
+        )
+    }
+
+    private fun errorBody() = ErrorBody(500, "Internal Server error", false)
 
     @After
     fun tearDown() {

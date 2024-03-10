@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
@@ -24,7 +25,6 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         setContent {
             MyApp()
@@ -45,8 +45,10 @@ fun MyApp() {
 fun NavGraphBuilder.homePage() {
     composable(route = "movies") {
         val homePageViewModel: MovieHomePageViewModel = hiltViewModel<MovieHomePageViewModel>()
-        LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
-        val state by homePageViewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = LocalLifecycleOwner.current)
+        val state by homePageViewModel.uiState.collectAsStateWithLifecycle(
+            lifecycleOwner = LocalLifecycleOwner.current,
+            minActiveState = Lifecycle.State.CREATED
+        )
         MovieHomePage(state)
     }
 }

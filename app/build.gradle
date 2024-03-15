@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
     id 'com.google.dagger.hilt.android'
 }
 
@@ -37,9 +37,6 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.5"
-    }
-    kapt {
-        correctErrorTypes = true
     }
 }
 
@@ -79,7 +76,7 @@ dependencies {
 
     //hilt
     implementation("com.google.dagger:hilt-android:2.48")
-    kapt "com.google.dagger:hilt-compiler:2.48"
+    ksp "com.google.dagger:hilt-compiler:2.48"
 
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-1'
 }

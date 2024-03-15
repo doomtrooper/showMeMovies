@@ -1,5 +1,6 @@
 package com.example.showmemovies.models
 
+import androidx.room.Entity
 import com.squareup.moshi.Json
 
 data class TrendingMoviesResponse(

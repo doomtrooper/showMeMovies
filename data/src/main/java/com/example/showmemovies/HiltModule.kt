@@ -61,10 +61,6 @@ class HiltModule {
         TendingMoviesNetworkDataSource(moviesApi)
 
     @Provides
-    fun repository(trendingDataSource: ITendingMoviesNetworkDataSource): ITrendingMoviesRepository =
-        TrendingMoviesRepository(trendingDataSource)
-
-    @Provides
     fun database(@ApplicationContext appContext: Context): AppDatabase {
         return Room.databaseBuilder(
             appContext,
@@ -73,6 +69,14 @@ class HiltModule {
     }
 
     @Provides
-    fun trendingMoviesDao(appDatabase: AppDatabase): TrendingMovieDao = appDatabase.trendingMoviesDao()
+    fun trendingMoviesDao(appDatabase: AppDatabase): TrendingMovieDao =
+        appDatabase.trendingMoviesDao()
+
+    @Provides
+    fun repository(
+        trendingDataSource: ITendingMoviesNetworkDataSource,
+        trendingMovieDao: TrendingMovieDao
+    ): ITrendingMoviesRepository =
+        TrendingMoviesRepository(trendingDataSource, trendingMovieDao)
 
 }

@@ -16,7 +16,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.squareup.leakcanary.core.BuildConfig
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 /*
 * Once Hilt is set up in your Application class and an application-level component is available,
@@ -28,6 +30,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyApp()
+        }
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
         }
     }
 }

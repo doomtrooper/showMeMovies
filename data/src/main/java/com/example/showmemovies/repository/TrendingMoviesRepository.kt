@@ -30,7 +30,7 @@ class TrendingMoviesRepository @Inject constructor(
                     )
                 )
             },
-            flow { trendingMoviesNetworkDataSource.fetchTrendingMovies() }
+            trendingMoviesNetworkDataSource.fetchTrendingMovies()
         )
     }
 

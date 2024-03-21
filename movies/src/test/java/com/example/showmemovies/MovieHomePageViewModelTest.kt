@@ -141,7 +141,7 @@ class MovieHomePageViewModelTest {
     }
 
     @Test
-    fun `should contain movie and error when network call is failure and db also have stale data`() = runTest {
+    fun `should contain movie and error when network call is failure and db have stale data`() = runTest {
         coEvery { repository.fetchTrendingMovies() } returns flow {
             emit(Success(data))
             delay(1000)

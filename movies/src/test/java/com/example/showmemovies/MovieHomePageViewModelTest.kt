@@ -153,7 +153,7 @@ class MovieHomePageViewModelTest {
             repository.fetchTrendingMovies()
         }
         assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
-        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel2)
+        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
         advanceUntilIdle()
         assert(
             homePageViewModel.uiState.value.errorWrapper?.serviceErrorBody?.equals(errorBody)

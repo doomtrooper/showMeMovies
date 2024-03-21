@@ -7,6 +7,7 @@ import com.example.showmemovies.NetworkResponseWrapper.*
 import com.example.showmemovies.models.TrendingMoviesResponse
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -17,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MovieHomePageViewModel @Inject constructor(
     private val repository: ITrendingMoviesRepository,
+    @IODispatcher private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
     // Expose screen UI state
     var uiState = MutableStateFlow(MovieHomePageUiState())
@@ -26,7 +28,7 @@ class MovieHomePageViewModel @Inject constructor(
             uiState.update {
                 uiState.value.copy(loading = true)
             }
-            launch(Dispatchers.IO) {
+            launch(dispatcher) {
                 repository.fetchTrendingMovies().collect {
                     withContext(Dispatchers.Main) {
                         setNetworkResponseInUiState(it)
@@ -65,14 +67,12 @@ class MovieHomePageViewModel @Inject constructor(
                 )
             }
 
-            is Success -> {
-                uiState.update {
-                    uiState.value.copy(
-                        error = false,
-                        loading = false,
-                        trendingMovies = fetchTrendingMovies.body.movieList
-                    )
-                }
+            is Success -> uiState.update {
+                uiState.value.copy(
+                    error = false,
+                    loading = false,
+                    trendingMovies = fetchTrendingMovies.body.movieList
+                )
             }
         }
     }

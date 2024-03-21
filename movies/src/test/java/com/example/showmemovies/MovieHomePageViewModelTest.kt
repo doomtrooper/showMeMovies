@@ -9,17 +9,17 @@ import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 
@@ -42,6 +42,8 @@ class MovieHomePageViewModelTest {
         7.374,
         684
     )
+    private val movieModel2 = movieModel.copy(id = 934434, title = "Scream V")
+
     private val data =
         TrendingMoviesResponse(
             totalPages = 0,
@@ -50,34 +52,47 @@ class MovieHomePageViewModelTest {
             movieList = listOf(movieModel)
         )
 
+    private val data2 =
+        TrendingMoviesResponse(
+            totalPages = 0,
+            totalResults = 0,
+            page = 0,
+            movieList = listOf(movieModel2)
+        )
+
 
     private val errorBody = ErrorBody(statusCode = 500, "API failed", false)
-    private val dispatcher: TestDispatcher = UnconfinedTestDispatcher()
-
     @MockK
     lateinit var repository: ITrendingMoviesRepository
+    private val unConfinedTestDispatcher: TestDispatcher = UnconfinedTestDispatcher()
+
+    @ExperimentalCoroutinesApi
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         MockKAnnotations.init(this)
     }
 
     @Test
-    fun `should return non null list when api fetch trending movies is success`() = runTest{
-        coEvery { repository.fetchTrendingMovies() } returns flow { Success(data) }
-        val homePageViewModel = MovieHomePageViewModel(repository)
+    fun `should contain movies when network call is success and no db data`() = runTest {
+        coEvery { repository.fetchTrendingMovies() } returns flow { emit(Success(data)) }
+        val homePageViewModel = MovieHomePageViewModel(repository, unConfinedTestDispatcher)
+        advanceUntilIdle()
         coVerify {
             repository.fetchTrendingMovies()
         }
-        advanceUntilIdle()
+        assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
         assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
     }
 
     @Test
-    fun `should return error when api fetch trending movies is failure`() {
-        coEvery { repository.fetchTrendingMovies() } returns flow { ServiceError(errorBody) }
-        val homePageViewModel = MovieHomePageViewModel(repository)
+    fun `should contain error when network call is failure and no db data`() = runTest {
+        coEvery { repository.fetchTrendingMovies() } returns flow { emit(ServiceError(errorBody)) }
+        val homePageViewModel = MovieHomePageViewModel(repository, unConfinedTestDispatcher)
+        advanceUntilIdle()
         coVerify {
             repository.fetchTrendingMovies()
         }
@@ -89,9 +104,61 @@ class MovieHomePageViewModelTest {
         )
     }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
+    @Test
+    fun `should contain same movie when network call is success and db also have same stale data`() = runTest {
+        coEvery { repository.fetchTrendingMovies() } returns flow {
+            emit(Success(data))
+            delay(1000)
+            emit(Success(data))
+        }
+        val homePageViewModel = MovieHomePageViewModel(repository, StandardTestDispatcher())
+        advanceTimeBy(100)
+        coVerify {
+            repository.fetchTrendingMovies()
+        }
+        assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
+        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
+        advanceUntilIdle()
+        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
+    }
+
+    @Test
+    fun `should update when network call is success and db also have stale data`() = runTest {
+        coEvery { repository.fetchTrendingMovies() } returns flow {
+            emit(Success(data))
+            delay(1000)
+            emit(Success(data2))
+        }
+        val homePageViewModel = MovieHomePageViewModel(repository, StandardTestDispatcher())
+        advanceTimeBy(100)
+        coVerify {
+            repository.fetchTrendingMovies()
+        }
+        assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
+        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
+        advanceUntilIdle()
+        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel2)
+    }
+
+    @Test
+    fun `should contain movie and error when network call is failure and db also have stale data`() = runTest {
+        coEvery { repository.fetchTrendingMovies() } returns flow {
+            emit(Success(data))
+            delay(1000)
+            emit(ServiceError(errorBody))
+        }
+        val homePageViewModel = MovieHomePageViewModel(repository, StandardTestDispatcher())
+        advanceTimeBy(100)
+        coVerify {
+            repository.fetchTrendingMovies()
+        }
+        assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
+        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
+        advanceUntilIdle()
+        assert(
+            homePageViewModel.uiState.value.errorWrapper?.serviceErrorBody?.equals(errorBody)
+                ?: false
+        )
     }
 
 }

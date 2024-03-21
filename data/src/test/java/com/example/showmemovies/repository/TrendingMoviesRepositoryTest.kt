@@ -2,6 +2,7 @@ package com.example.showmemovies.repository
 
 import app.cash.turbine.test
 import com.example.showmemovies.ErrorBody
+import com.example.showmemovies.MainCoroutineRule
 import com.example.showmemovies.NetworkResponseWrapper
 import com.example.showmemovies.datasource.ITendingMoviesNetworkDataSource
 import com.example.showmemovies.datasource.TrendingMovieDao
@@ -11,16 +12,13 @@ import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,7 +31,6 @@ class TrendingMoviesRepositoryTest {
 
     private lateinit var repository: ITrendingMoviesRepository
 
-    private val dispatcher: TestDispatcher = UnconfinedTestDispatcher()
     private val movieModel: MovieModel = MovieModel(
         false,
         "/44immBwzhDVyjn87b3x3l9mlhAD.jpg",
@@ -60,9 +57,12 @@ class TrendingMoviesRepositoryTest {
 
     private val errorBody = ErrorBody(statusCode = 500, "API failed", false)
 
+    @ExperimentalCoroutinesApi
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
     @Before
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         MockKAnnotations.init(this)
         repository = TrendingMoviesRepository(trendingNetworkDataSource, trendingMovieDao)
     }

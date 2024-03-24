@@ -1,37 +1,39 @@
 package com.example.showmemovies.repository
 
-import com.example.showmemovies.NetworkResponseWrapper
-import com.example.showmemovies.datasource.ITendingMoviesNetworkDataSource
-import com.example.showmemovies.datasource.TrendingMovieDao
+import com.example.showmemovies.utils.NetworkResponseWrapper
+import com.example.showmemovies.datasource.network.ITendingMoviesNetworkDataSource
+import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
+import com.example.showmemovies.datasource.dao.TrendingMovieDao
+import com.example.showmemovies.models.MovieModelWithGenres
 import com.example.showmemovies.models.TrendingMoviesResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 
 interface ITrendingMoviesRepository {
-    suspend fun fetchTrendingMovies(): Flow<NetworkResponseWrapper<TrendingMoviesResponse>>
+    suspend fun flowTrendingMoviesFromDb(): Flow<List<MovieModelWithGenres>>
+    suspend fun fetchTrendingMoviesFromNetwork(): NetworkResponseWrapper<TrendingMoviesResponse>
 }
 
 class TrendingMoviesRepository @Inject constructor(
     private val trendingMoviesNetworkDataSource: ITendingMoviesNetworkDataSource,
-    private val trendingMovieDao: TrendingMovieDao
+    private val trendingMovieDao: TrendingMovieDao,
+    private val movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao
 ) : ITrendingMoviesRepository {
-    override suspend fun fetchTrendingMovies(): Flow<NetworkResponseWrapper<TrendingMoviesResponse>> {
-        return merge(
-            trendingMovieDao.getAllTrendingMovies().map {
-                NetworkResponseWrapper.Success(
-                    TrendingMoviesResponse(
-                        page = 0,
-                        movieList = it,
-                        totalPages = 1,
-                        totalResults = it.size
+    override suspend fun flowTrendingMoviesFromDb(): Flow<List<MovieModelWithGenres>> {
+        return trendingMovieDao.fetchTrendingMoviesWithGenre()
+    }
+
+    override suspend fun fetchTrendingMoviesFromNetwork(): NetworkResponseWrapper<TrendingMoviesResponse> {
+        return trendingMoviesNetworkDataSource.fetchTrendingMovies().also {
+            if (it is NetworkResponseWrapper.Success) {
+                trendingMovieDao.updateNewTrendingMovies(it.body.movieList)
+                it.body.movieList.forEach { movieModel ->
+                    movieIdGenreIdMappingDao.saveGenreIdsFromMovie(
+                        movieModel
                     )
-                )
-            },
-            trendingMoviesNetworkDataSource.fetchTrendingMovies()
-        )
+                }
+            }
+        }
     }
 
 }

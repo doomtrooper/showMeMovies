@@ -1,11 +1,11 @@
 package com.example.showmemovies.repository
 
 import app.cash.turbine.test
-import com.example.showmemovies.ErrorBody
+import com.example.showmemovies.utils.ErrorBody
 import com.example.showmemovies.MainCoroutineRule
-import com.example.showmemovies.NetworkResponseWrapper
-import com.example.showmemovies.datasource.ITendingMoviesNetworkDataSource
-import com.example.showmemovies.datasource.TrendingMovieDao
+import com.example.showmemovies.utils.NetworkResponseWrapper
+import com.example.showmemovies.datasource.network.ITendingMoviesNetworkDataSource
+import com.example.showmemovies.datasource.dao.TrendingMovieDao
 import com.example.showmemovies.models.MovieModel
 import com.example.showmemovies.models.TrendingMoviesResponse
 import io.mockk.MockKAnnotations
@@ -76,7 +76,7 @@ class TrendingMoviesRepositoryTest {
         coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns flow { emit(success) }
         coEvery { trendingMovieDao.getAllTrendingMovies() } returns emptyFlow()
 
-        repository.fetchTrendingMovies().test {
+        repository.flowTrendingMoviesFromDb().test {
             val networkResponseWrapper = awaitItem()
             cancelAndConsumeRemainingEvents()
             assert(networkResponseWrapper == success)
@@ -98,7 +98,7 @@ class TrendingMoviesRepositoryTest {
             emit(listOf(movieModel))
         }
 
-        repository.fetchTrendingMovies().test {
+        repository.flowTrendingMoviesFromDb().test {
             val dbData = awaitItem()
             val networkData = awaitItem()
             cancelAndConsumeRemainingEvents()
@@ -126,7 +126,7 @@ class TrendingMoviesRepositoryTest {
             emit(listOf(movieModel))
         }
 
-        repository.fetchTrendingMovies().test {
+        repository.flowTrendingMoviesFromDb().test {
             val dbData = awaitItem()
             val networkData = awaitItem()
             cancelAndConsumeRemainingEvents()

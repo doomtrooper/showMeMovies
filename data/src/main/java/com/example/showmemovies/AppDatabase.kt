@@ -2,9 +2,9 @@ package com.example.showmemovies
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.example.showmemovies.datasource.GenreMappingDao
-import com.example.showmemovies.datasource.MovieIdGenreIdMappingDao
-import com.example.showmemovies.datasource.TrendingMovieDao
+import com.example.showmemovies.datasource.dao.GenreMappingDao
+import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
+import com.example.showmemovies.datasource.dao.TrendingMovieDao
 import com.example.showmemovies.models.MovieIdGenreIdMapping
 import com.example.showmemovies.models.GenreNameIdMapping
 import com.example.showmemovies.models.MovieModel

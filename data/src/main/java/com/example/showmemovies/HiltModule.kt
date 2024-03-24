@@ -1,14 +1,17 @@
 package com.example.showmemovies
 
-import android.app.Application
 import android.content.Context
 import androidx.room.Room
-import com.example.showmemovies.datasource.ITendingMoviesNetworkDataSource
-import com.example.showmemovies.datasource.MoviesApi
-import com.example.showmemovies.datasource.TendingMoviesNetworkDataSource
-import com.example.showmemovies.datasource.TrendingMovieDao
+import com.example.showmemovies.datasource.dao.GenreMappingDao
+import com.example.showmemovies.datasource.network.GenreNetworkDataSource
+import com.example.showmemovies.datasource.network.IGenreNetworkDataSource
+import com.example.showmemovies.datasource.network.ITendingMoviesNetworkDataSource
+import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
+import com.example.showmemovies.datasource.network.TendingMoviesNetworkDataSource
+import com.example.showmemovies.datasource.dao.TrendingMovieDao
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import com.example.showmemovies.repository.TrendingMoviesRepository
+import com.example.showmemovies.utils.NetworkResponseWrapperCallAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,12 +25,14 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Qualifier
+import javax.inject.Singleton
 
 
 @InstallIn(SingletonComponent::class)
 @Module
 class HiltModule {
 
+    @Singleton
     @Provides
     fun provideOkHttpClient(): OkHttpClient {
         val httpLoggingInterceptor = HttpLoggingInterceptor()
@@ -48,6 +53,7 @@ class HiltModule {
         }.build()
     }
 
+    @Singleton
     @Provides
     fun provideRetrofitInstance(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
         .baseUrl("https://api.themoviedb.org")
@@ -56,13 +62,21 @@ class HiltModule {
         .client(okHttpClient)
         .build()
 
+    @Singleton
     @Provides
     fun providesMoviesApi(retrofit: Retrofit): MoviesApi = retrofit.create(MoviesApi::class.java)
 
+    @Singleton
     @Provides
     fun data(moviesApi: MoviesApi): ITendingMoviesNetworkDataSource =
         TendingMoviesNetworkDataSource(moviesApi)
 
+    @Singleton
+    @Provides
+    fun provideGenreNetworkDatasource(moviesApi: MoviesApi): IGenreNetworkDataSource =
+        GenreNetworkDataSource(moviesApi)
+
+    @Singleton
     @Provides
     fun database(@ApplicationContext appContext: Context): AppDatabase {
         return Room.databaseBuilder(
@@ -71,23 +85,50 @@ class HiltModule {
         ).build()
     }
 
+    @Singleton
     @Provides
-    fun trendingMoviesDao(appDatabase: AppDatabase): TrendingMovieDao =
-        appDatabase.trendingMoviesDao()
+    fun trendingMoviesDao(appDatabase: AppDatabase): TrendingMovieDao {
+        println("trendingMoviesDao: $appDatabase")
+        return appDatabase.trendingMoviesDao()
+    }
 
+    @Singleton
+    @Provides
+    fun providesMovieGenreMappingDao(appDatabase: AppDatabase): MovieIdGenreIdMappingDao {
+        println("providesMovieGenreMappingDao: $appDatabase")
+        return appDatabase.movieIdGenreIdMappingDao()
+    }
+
+    @Singleton
+    @Provides
+    fun providesGenreMappingDao(appDatabase: AppDatabase): GenreMappingDao {
+        println("providesGenreMappingDao: $appDatabase")
+        return appDatabase.genreDao()
+    }
+
+    @Singleton
     @Provides
     fun repository(
         trendingDataSource: ITendingMoviesNetworkDataSource,
-        trendingMovieDao: TrendingMovieDao
+        trendingMovieDao: TrendingMovieDao,
+        movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao
     ): ITrendingMoviesRepository =
-        TrendingMoviesRepository(trendingDataSource, trendingMovieDao)
+        TrendingMoviesRepository(trendingDataSource, trendingMovieDao, movieIdGenreIdMappingDao)
 
+    @Singleton
     @Provides
     @IODispatcher
     fun providerIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+
+    @Singleton
     @Provides
     @DefaultDispatcher
     fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
+
+    @Singleton
+    @Provides
+    @MainDispatcher
+    fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
 }
 
 @Qualifier
@@ -97,3 +138,7 @@ annotation class IODispatcher
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class DefaultDispatcher
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MainDispatcher

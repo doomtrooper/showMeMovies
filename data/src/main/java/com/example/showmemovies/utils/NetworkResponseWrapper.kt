@@ -1,4 +1,4 @@
-package com.example.showmemovies
+package com.example.showmemovies.utils
 
 import com.squareup.moshi.Json
 import okhttp3.Request

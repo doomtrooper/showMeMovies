@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -31,19 +32,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Lifecycle.Event.ON_ANY
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
-import com.example.showmemovies.models.MovieModel
+import com.example.showmemovies.models.MovieModelWithGenres
 import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MovieHomePage(state: MovieHomePageUiState) {
-    /*
     println(state)
+    /*
     val lifeCycleEvent = rememberLifeCycleEvent()
     println("mutableLifeCycleEvent: ${lifeCycleEvent.value}")
     if (lifeCycleEvent.value == ON_START) {
@@ -64,7 +66,12 @@ fun MovieHomePage(state: MovieHomePageUiState) {
                 vertical = 8.dp
             ),
         ) {
-            MovieCard(movie = state.trendingMovies[it], pagerState, it)
+            MovieCard(
+                movieModelWithGenres = state.trendingMovies[it],
+                pagerState,
+                it,
+                state.genreIdMapping
+            )
         }
     } else {
         HomeScreen()
@@ -73,7 +80,12 @@ fun MovieHomePage(state: MovieHomePageUiState) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MovieCard(movie: MovieModel, pagerState: PagerState, page: Int) {
+private fun MovieCard(
+    movieModelWithGenres: MovieModelWithGenres,
+    pagerState: PagerState,
+    page: Int,
+    genreIdMapping: Map<Long, String>
+) {
     Card(
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier
@@ -97,20 +109,36 @@ private fun MovieCard(movie: MovieModel, pagerState: PagerState, page: Int) {
         elevation = 10.dp
     ) {
         AsyncImage(
-            model = "https://image.tmdb.org/t/p/w500/" + movie.posterPath,
-            contentDescription = movie.title,
+            model = "https://image.tmdb.org/t/p/w500/" + movieModelWithGenres.movieModel.posterPath,
+            contentDescription = movieModelWithGenres.movieModel.title,
             contentScale = ContentScale.FillWidth
         )
         Box(
             modifier = Modifier
                 .padding(10.dp)
         ) {
-            Text(
-                text = movie.title,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(alignment = Alignment.BottomStart)
-            )
+            Column(Modifier.align(alignment = Alignment.BottomStart)) {
+                Text(
+                    text = movieModelWithGenres.movieModel.title,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    )
+                LazyRow (horizontalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(top = 2.dp)){
+                    items(
+                        movieModelWithGenres.genreIdMapping.size,
+                        { index -> movieModelWithGenres.genreIdMapping[index].genreId }) {
+                        Text(
+                            text = genreIdMapping[(movieModelWithGenres.genreIdMapping[it].genreId)]
+                                ?: "",
+                            fontSize = 14.sp,
+                            lineHeight = 16.sp,
+                            color = Color.White,
+                        )
+                    }
+                }
+            }
         }
     }
 

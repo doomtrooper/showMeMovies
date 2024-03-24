@@ -9,6 +9,8 @@ import com.example.showmemovies.datasource.network.ITendingMoviesNetworkDataSour
 import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
 import com.example.showmemovies.datasource.network.TendingMoviesNetworkDataSource
 import com.example.showmemovies.datasource.dao.TrendingMovieDao
+import com.example.showmemovies.repository.GenreRepository
+import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import com.example.showmemovies.repository.TrendingMoviesRepository
 import com.example.showmemovies.utils.NetworkResponseWrapperCallAdapterFactory
@@ -105,6 +107,13 @@ class HiltModule {
         println("providesGenreMappingDao: $appDatabase")
         return appDatabase.genreDao()
     }
+
+    @Singleton
+    @Provides
+    fun providesGenreRepository(
+        genreNetworkDataSource: IGenreNetworkDataSource,
+        genreMappingDao: GenreMappingDao
+    ): IGenreRepository = GenreRepository(genreNetworkDataSource, genreMappingDao)
 
     @Singleton
     @Provides

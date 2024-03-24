@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.showmemovies.utils.NetworkResponseWrapper.*
 import com.example.showmemovies.models.TrendingMoviesResponse
-import com.example.showmemovies.repository.GenreRepository
+import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import com.example.showmemovies.utils.NetworkResponseWrapper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,9 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MovieHomePageViewModel @Inject constructor(
     private val repository: ITrendingMoviesRepository,
-    private val genreRepository: GenreRepository,
+    private val genreRepository: IGenreRepository,
     @IODispatcher private val dispatcher: CoroutineDispatcher,
-    @MainDispatcher private val mainDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     // Expose screen UI state
     var uiState = MutableStateFlow(MovieHomePageUiState(loading = true))
@@ -42,14 +41,14 @@ class MovieHomePageViewModel @Inject constructor(
                 val networkResponseWrapper: NetworkResponseWrapper<TrendingMoviesResponse>? =
                     repository.fetchTrendingMoviesFromNetwork().takeIf { it !is Success }
                 networkResponseWrapper?.let {
-                    withContext(mainDispatcher) {
+                    withContext(Dispatchers.Main) {
                         setNetworkResponseInUiState(it)
                     }
                 }
             }
             launch(dispatcher) {
                 genreRepository.flowGenresFromDb().collect { genres ->
-                    withContext(mainDispatcher) {
+                    withContext(Dispatchers.Main) {
                         uiState.update {
                             uiState.value.copy(
                                 genreIdMapping = genres.associate { it.genreId to it.genreName }

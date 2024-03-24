@@ -1,22 +1,26 @@
 package com.example.showmemovies
 
-import com.example.showmemovies.utils.NetworkResponseWrapper.ServiceError
-import com.example.showmemovies.utils.NetworkResponseWrapper.Success
+import com.example.showmemovies.models.GenreNameIdMappingContainer
+import com.example.showmemovies.models.MovieIdGenreIdMapping
 import com.example.showmemovies.models.MovieModel
+import com.example.showmemovies.models.MovieModelWithGenres
 import com.example.showmemovies.models.TrendingMoviesResponse
+import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import com.example.showmemovies.utils.ErrorBody
+import com.example.showmemovies.utils.NetworkResponseWrapper.ServiceError
+import com.example.showmemovies.utils.NetworkResponseWrapper.Success
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -44,6 +48,13 @@ class MovieHomePageViewModelTest {
         684
     )
     private val movieModel2 = movieModel.copy(id = 934434, title = "Scream V")
+    private val movieIdGenreIdMappings = listOf(MovieIdGenreIdMapping(movieId = movieModel.id, 1L))
+    private val movieIdGenreIdMappings2 =
+        listOf(MovieIdGenreIdMapping(movieId = movieModel2.id, 1L))
+    private val movieModelWithGenre: MovieModelWithGenres =
+        MovieModelWithGenres(movieModel, movieIdGenreIdMappings)
+    private val movieModelWithGenre2: MovieModelWithGenres =
+        MovieModelWithGenres(movieModel2, movieIdGenreIdMappings2)
 
     private val data =
         TrendingMoviesResponse(
@@ -63,13 +74,18 @@ class MovieHomePageViewModelTest {
 
 
     private val errorBody = ErrorBody(statusCode = 500, "API failed", false)
+
     @MockK
     lateinit var repository: ITrendingMoviesRepository
+
+    @MockK
+    lateinit var genreRepository: IGenreRepository
     private val unConfinedTestDispatcher: TestDispatcher = UnconfinedTestDispatcher()
+    private val standardTestDispatcher: TestDispatcher = StandardTestDispatcher()
 
     @ExperimentalCoroutinesApi
     @get:Rule
-    var mainCoroutineRule = MainCoroutineRule()
+    var mainCoroutineRule = MainCoroutineRule(unConfinedTestDispatcher)
 
 
     @Before
@@ -78,88 +94,79 @@ class MovieHomePageViewModelTest {
     }
 
     @Test
-    fun `should contain movies when network call is success and no db data`() = runTest {
-        coEvery { repository.flowTrendingMoviesFromDb() } returns flow { emit(Success(data)) }
-        val homePageViewModel = MovieHomePageViewModel(repository, unConfinedTestDispatcher)
-        advanceUntilIdle()
-        coVerify {
-            repository.flowTrendingMoviesFromDb()
+    fun `should contain stale data when network call is success with empty result and db has stale data`() {
+        runTest(unConfinedTestDispatcher) {
+            coEvery { repository.flowTrendingMoviesFromDb() } returns flow {
+                emit(listOf(movieModelWithGenre))
+            }
+            coEvery { repository.fetchTrendingMoviesFromNetwork() } returns Success(
+                TrendingMoviesResponse(movieList = listOf())
+            )
+            coEvery { genreRepository.flowGenresFromDb() } returns emptyFlow()
+            coEvery { genreRepository.fetchGenreFromNetwork() } returns Success(
+                GenreNameIdMappingContainer(genres = emptyList())
+            )
+            val homePageViewModel =
+                MovieHomePageViewModel(repository, genreRepository, unConfinedTestDispatcher)
+            advanceUntilIdle()
+            coVerify {
+                repository.flowTrendingMoviesFromDb()
+            }
+            assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
+            assert(homePageViewModel.uiState.value.trendingMovies == listOf(movieModelWithGenre))
         }
-        assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
-        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
+    }
+
+
+    @Test
+    fun `should contain latest data when network call is success with non-empty result and db has stale data`() {
+        runTest(unConfinedTestDispatcher) {
+            coEvery { repository.flowTrendingMoviesFromDb() } returns flow {
+                emit(listOf(movieModelWithGenre))
+                delay(100)
+                emit(listOf(movieModelWithGenre2))
+            }
+            coEvery { repository.fetchTrendingMoviesFromNetwork() } returns Success(
+                TrendingMoviesResponse(movieList = listOf())
+            )
+            coEvery { genreRepository.flowGenresFromDb() } returns emptyFlow()
+            coEvery { genreRepository.fetchGenreFromNetwork() } returns Success(
+                GenreNameIdMappingContainer(genres = emptyList())
+            )
+            val homePageViewModel =
+                MovieHomePageViewModel(repository, genreRepository, unConfinedTestDispatcher)
+            advanceUntilIdle()
+            coVerify {
+                repository.flowTrendingMoviesFromDb()
+            }
+            assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
+            assert(homePageViewModel.uiState.value.trendingMovies == listOf(movieModelWithGenre2))
+        }
     }
 
     @Test
-    fun `should contain error when network call is failure and no db data`() = runTest {
-        coEvery { repository.flowTrendingMoviesFromDb() } returns flow { emit(ServiceError(errorBody)) }
-        val homePageViewModel = MovieHomePageViewModel(repository, unConfinedTestDispatcher)
-        advanceUntilIdle()
-        coVerify {
-            repository.flowTrendingMoviesFromDb()
+    fun `should contain latest data and error body when network call is failure and db has stale data`() {
+        runTest(unConfinedTestDispatcher) {
+            coEvery { repository.flowTrendingMoviesFromDb() } returns flow {
+                emit(listOf(movieModelWithGenre))
+            }
+            coEvery { repository.fetchTrendingMoviesFromNetwork() } returns ServiceError(errorBody)
+            coEvery { genreRepository.flowGenresFromDb() } returns emptyFlow()
+            coEvery { genreRepository.fetchGenreFromNetwork() } returns Success(
+                GenreNameIdMappingContainer(genres = emptyList())
+            )
+            val homePageViewModel =
+                MovieHomePageViewModel(repository, genreRepository, unConfinedTestDispatcher)
+            advanceUntilIdle()
+            coVerify {
+                repository.flowTrendingMoviesFromDb()
+            }
+            assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
+            assert(homePageViewModel.uiState.value.trendingMovies == listOf(movieModelWithGenre))
+            assert(homePageViewModel.uiState.value.error)
+            assert(homePageViewModel.uiState.value.errorWrapper?.serviceErrorBody == errorBody)
         }
-        assert(!homePageViewModel.uiState.value.loading)
-        assert(homePageViewModel.uiState.value.error)
-        assert(
-            homePageViewModel.uiState.value.errorWrapper?.serviceErrorBody?.equals(errorBody)
-                ?: false
-        )
     }
 
-    @Test
-    fun `should contain same movie when network call is success and db also have same stale data`() = runTest {
-        coEvery { repository.flowTrendingMoviesFromDb() } returns flow {
-            emit(Success(data))
-            delay(1000)
-            emit(Success(data))
-        }
-        val homePageViewModel = MovieHomePageViewModel(repository, StandardTestDispatcher())
-        advanceTimeBy(100)
-        coVerify {
-            repository.flowTrendingMoviesFromDb()
-        }
-        assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
-        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
-        advanceUntilIdle()
-        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
-    }
-
-    @Test
-    fun `should update when network call is success and db also have stale data`() = runTest {
-        coEvery { repository.flowTrendingMoviesFromDb() } returns flow {
-            emit(Success(data))
-            delay(1000)
-            emit(Success(data2))
-        }
-        val homePageViewModel = MovieHomePageViewModel(repository, StandardTestDispatcher())
-        advanceTimeBy(100)
-        coVerify {
-            repository.flowTrendingMoviesFromDb()
-        }
-        assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
-        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
-        advanceUntilIdle()
-        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel2)
-    }
-
-    @Test
-    fun `should contain movie and error when network call is failure and db have stale data`() = runTest {
-        coEvery { repository.flowTrendingMoviesFromDb() } returns flow {
-            emit(Success(data))
-            delay(1000)
-            emit(ServiceError(errorBody))
-        }
-        val homePageViewModel = MovieHomePageViewModel(repository, StandardTestDispatcher())
-        advanceTimeBy(100)
-        coVerify {
-            repository.flowTrendingMoviesFromDb()
-        }
-        assert(homePageViewModel.uiState.value.trendingMovies.isNotEmpty())
-        assert(homePageViewModel.uiState.value.trendingMovies[0] == movieModel)
-        advanceUntilIdle()
-        assert(
-            homePageViewModel.uiState.value.errorWrapper?.serviceErrorBody?.equals(errorBody)
-                ?: false
-        )
-    }
 
 }

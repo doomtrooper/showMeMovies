@@ -9,13 +9,13 @@ import androidx.room.Relation
 import com.squareup.moshi.Json
 
 data class TrendingMoviesResponse(
-    val page: Int,
+    val page: Int = 0,
     @field:Json(name = "results")
     val movieList: List<MovieModel>,
     @field:Json(name = "total_pages")
-    val totalPages: Int,
+    val totalPages: Int = 0,
     @field:Json(name = "total_results")
-    val totalResults: Int,
+    val totalResults: Int = 0,
 )
 
 @Entity(tableName = "tending_movies")

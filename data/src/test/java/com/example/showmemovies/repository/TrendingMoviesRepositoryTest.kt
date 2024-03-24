@@ -3,18 +3,19 @@ package com.example.showmemovies.repository
 import app.cash.turbine.test
 import com.example.showmemovies.utils.ErrorBody
 import com.example.showmemovies.MainCoroutineRule
+import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
 import com.example.showmemovies.utils.NetworkResponseWrapper
 import com.example.showmemovies.datasource.network.ITendingMoviesNetworkDataSource
 import com.example.showmemovies.datasource.dao.TrendingMovieDao
+import com.example.showmemovies.models.MovieIdGenreIdMapping
 import com.example.showmemovies.models.MovieModel
+import com.example.showmemovies.models.MovieModelWithGenres
 import com.example.showmemovies.models.TrendingMoviesResponse
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -25,6 +26,9 @@ import org.junit.Test
 class TrendingMoviesRepositoryTest {
     @MockK
     private lateinit var trendingMovieDao: TrendingMovieDao
+
+    @MockK
+    private lateinit var movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao
 
     @MockK
     private lateinit var trendingNetworkDataSource: ITendingMoviesNetworkDataSource
@@ -54,7 +58,7 @@ class TrendingMoviesRepositoryTest {
             page = 0,
             movieList = listOf(movieModel)
         )
-
+    private val movieIdGenreIdMappings = listOf(MovieIdGenreIdMapping(movieId = movieModel.id, 1L))
     private val errorBody = ErrorBody(statusCode = 500, "API failed", false)
 
     @ExperimentalCoroutinesApi
@@ -64,79 +68,80 @@ class TrendingMoviesRepositoryTest {
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = TrendingMoviesRepository(trendingNetworkDataSource, trendingMovieDao)
+        repository = TrendingMoviesRepository(
+            trendingNetworkDataSource,
+            trendingMovieDao,
+            movieIdGenreIdMappingDao
+        )
     }
 
     @Test
-    fun `fetch trending movies no db just network`() = runTest {
+    fun `observe trending movies from db when db is empty`() = runTest {
+        coEvery { trendingMovieDao.fetchTrendingMoviesWithGenre() } returns flow {
+            emit(listOf())
+        }
+
+        repository.flowTrendingMoviesFromDb().test {
+            val emptyData = awaitItem()
+            cancelAndConsumeRemainingEvents()
+            coVerify { trendingMovieDao.fetchTrendingMoviesWithGenre() }
+            assert(emptyData.isEmpty())
+        }
+    }
+
+
+    @Test
+    fun `observe trending movies from db when db has stale data`() = runTest {
+        val modelWithGenres =
+            MovieModelWithGenres(movieModel, genreIdMapping = movieIdGenreIdMappings)
+        coEvery { trendingMovieDao.fetchTrendingMoviesWithGenre() } returns flow {
+            emit(
+                listOf(
+                    modelWithGenres
+                )
+            )
+        }
+
+        repository.flowTrendingMoviesFromDb().test {
+            val movieModelWithGenres = awaitItem()
+            cancelAndConsumeRemainingEvents()
+            coVerify { trendingMovieDao.fetchTrendingMoviesWithGenre() }
+            assert(movieModelWithGenres.isNotEmpty())
+            assert(movieModelWithGenres == listOf(modelWithGenres))
+        }
+    }
+
+    @Test
+    fun `fetch trending movies from network with success`() = runTest {
         val success = NetworkResponseWrapper.Success(
             data
         )
 
-        coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns flow { emit(success) }
-        coEvery { trendingMovieDao.getAllTrendingMovies() } returns emptyFlow()
+        coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns success
+        coEvery { trendingMovieDao.updateNewTrendingMovies(data.movieList) } returns Unit
+        coEvery { movieIdGenreIdMappingDao.saveGenreIdsFromMovie(movieModel) } returns Unit
 
-        repository.flowTrendingMoviesFromDb().test {
-            val networkResponseWrapper = awaitItem()
-            cancelAndConsumeRemainingEvents()
-            assert(networkResponseWrapper == success)
-            coVerify { trendingNetworkDataSource.fetchTrendingMovies() }
+        val fetchTrendingMoviesFromNetwork = repository.fetchTrendingMoviesFromNetwork()
+        coVerify { trendingMovieDao.updateNewTrendingMovies(data.movieList) }
+        coVerify { movieIdGenreIdMappingDao.saveGenreIdsFromMovie(movieModel) }
+        assert(fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.Success)
+        if (fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.Success) {
+            assert(fetchTrendingMoviesFromNetwork.body == data)
         }
     }
 
     @Test
-    fun `fetch trending movies stale db and network`() = runTest {
-        val success = NetworkResponseWrapper.Success(
-            data
-        )
-
-        coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns flow {
-            delay(100)
-            emit(success)
-        }
-        coEvery { trendingMovieDao.getAllTrendingMovies() } returns flow {
-            emit(listOf(movieModel))
-        }
-
-        repository.flowTrendingMoviesFromDb().test {
-            val dbData = awaitItem()
-            val networkData = awaitItem()
-            cancelAndConsumeRemainingEvents()
-            assert(dbData is NetworkResponseWrapper.Success)
-            assert(networkData is NetworkResponseWrapper.Success)
-            val responseSuccess = dbData as NetworkResponseWrapper.Success
-            assert(responseSuccess.body.movieList[0] == movieModel)
-            assert(networkData == success)
-            coVerify { trendingNetworkDataSource.fetchTrendingMovies() }
-            coVerify { trendingMovieDao.getAllTrendingMovies() }
-        }
-    }
-
-    @Test
-    fun `fetch trending movies stale db and network fails`() = runTest {
+    fun `fetch trending movies from network with failure`() = runTest {
         val serviceError = NetworkResponseWrapper.ServiceError(
             errorBody
         )
 
-        coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns flow {
-            delay(100)
-            emit(serviceError)
-        }
-        coEvery { trendingMovieDao.getAllTrendingMovies() } returns flow {
-            emit(listOf(movieModel))
-        }
+        coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns serviceError
 
-        repository.flowTrendingMoviesFromDb().test {
-            val dbData = awaitItem()
-            val networkData = awaitItem()
-            cancelAndConsumeRemainingEvents()
-            assert(dbData is NetworkResponseWrapper.Success)
-            assert(networkData is NetworkResponseWrapper.ServiceError)
-            val responseSuccess = dbData as NetworkResponseWrapper.Success
-            assert(responseSuccess.body.movieList[0] == movieModel)
-            assert(networkData == serviceError)
-            coVerify { trendingNetworkDataSource.fetchTrendingMovies() }
-            coVerify { trendingMovieDao.getAllTrendingMovies() }
+        val fetchTrendingMoviesFromNetwork = repository.fetchTrendingMoviesFromNetwork()
+        assert(fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.ServiceError)
+        if (fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.ServiceError) {
+            assert(fetchTrendingMoviesFromNetwork.errorBody == errorBody)
         }
     }
 

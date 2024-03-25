@@ -1,6 +1,6 @@
 package com.example.showmemovies.utils
 
-import com.squareup.moshi.Json
+import com.google.gson.annotations.SerializedName
 import okhttp3.Request
 import okhttp3.ResponseBody
 import okio.Timeout
@@ -22,9 +22,9 @@ sealed interface NetworkResponseWrapper<out S : Any> {
 }
 
 data class ErrorBody(
-    @field: Json(name = "status_code") val statusCode: Int,
-    @field: Json(name = "status_message") val statusMessage: String,
-    @field: Json(name = "success") val success: Boolean
+    @SerializedName("status_code") val statusCode: Int,
+    @SerializedName("status_message") val statusMessage: String,
+    @SerializedName("success") val success: Boolean
 )
 
 class NetworkResponseWrapperCall<S : Any>(

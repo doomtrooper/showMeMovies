@@ -6,53 +6,67 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.squareup.moshi.Json
+import com.google.gson.annotations.SerializedName
 
 data class TrendingMoviesResponse(
     val page: Int = 0,
-    @field:Json(name = "results")
+    @SerializedName("results")
     val movieList: List<MovieModel>,
-    @field:Json(name = "total_pages")
+    @SerializedName("total_pages")
     val totalPages: Int = 0,
-    @field:Json(name = "total_results")
+    @SerializedName("total_results")
     val totalResults: Int = 0,
 )
 
 @Entity(tableName = "tending_movies")
 data class MovieModel(
     val adult: Boolean,
-    @field:Json(name = "backdrop_path")
+
+    @SerializedName("backdrop_path")
     @ColumnInfo(name = "backdrop_path")
     val backdropPath: String,
+
     @PrimaryKey val id: Long,
+
+    @SerializedName(value = "title", alternate = ["name"])
     val title: String,
+
     @ColumnInfo(name = "original_language")
-    @field:Json(name = "original_language")
+    @SerializedName("original_language")
     val originalLanguage: String,
+
     @ColumnInfo(name = "original_title")
-    @field:Json(name = "original_title")
+    @SerializedName(value = "original_title", alternate = ["original_name"])
     val originalTitle: String,
+
     val overview: String,
+
     @ColumnInfo(name = "poster_path")
-    @field:Json(name = "poster_path")
+    @SerializedName("poster_path")
     val posterPath: String,
+
     @ColumnInfo(name = "media_type")
-    @field:Json(name = "media_type")
+    @SerializedName("media_type")
     val mediaType: String,
+
     val popularity: Double,
+
     @ColumnInfo(name = "release_date")
-    @field:Json(name = "release_date")
+    @SerializedName("release_date", alternate = ["first_air_date"])
     val releaseDate: String,
+
     val video: Boolean,
+
     @ColumnInfo(name = "vote_average")
-    @field:Json(name = "vote_average")
+    @SerializedName("vote_average")
     val voteAverage: Double,
+
     @ColumnInfo(name = "vote_count")
-    @field:Json(name = "vote_count")
+    @SerializedName("vote_count")
     val voteCount: Long,
 ) {
     @Ignore
-    @field:Json(name = "genre_ids")
+    @SerializedName("genre_ids")
     val genreIds: List<Long> = listOf()
 }
 
@@ -67,11 +81,11 @@ data class MovieIdGenreIdMapping(
 @Entity(tableName = "genre_name_id_mapping")
 data class GenreNameIdMapping(
     @ColumnInfo(name = "genre_name")
-    @field:Json(name = "name")
+    @SerializedName("name")
     val genreName: String,
     @PrimaryKey
     @ColumnInfo(name = "genre_id")
-    @field:Json(name = "id")
+    @SerializedName("id")
     val genreId: Long
 )
 

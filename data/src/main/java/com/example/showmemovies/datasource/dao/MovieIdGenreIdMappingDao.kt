@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.showmemovies.models.MovieIdGenreIdMapping
-import com.example.showmemovies.models.MovieModel
+import com.example.showmemovies.models.MediaModel
 
 @Dao
 interface MovieIdGenreIdMappingDao {
@@ -15,12 +15,12 @@ interface MovieIdGenreIdMappingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveGenreIdsFromMovie(movieMovieIdGenreIdMapping: List<MovieIdGenreIdMapping>)
 
-    suspend fun saveGenreIdsFromMovie(movieModel: MovieModel) {
+    suspend fun saveGenreIdsFromMovie(mediaModel: MediaModel) {
         val result = mutableListOf<MovieIdGenreIdMapping>()
-        movieModel.genreIds.forEach {
+        mediaModel.genreIds.forEach {
             result.add(
                 MovieIdGenreIdMapping(
-                    movieId = movieModel.id,
+                    movieId = mediaModel.id,
                     genreId = it
                 )
             )

@@ -3,8 +3,9 @@ package com.example.showmemovies
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.showmemovies.models.MEDIACATEGORY
 import com.example.showmemovies.utils.NetworkResponseWrapper.*
-import com.example.showmemovies.models.TrendingMoviesResponse
+import com.example.showmemovies.models.MediaResponseContainer
 import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import com.example.showmemovies.utils.NetworkResponseWrapper
@@ -29,7 +30,7 @@ class MovieHomePageViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             launch(dispatcher) {
-                repository.flowTrendingMoviesFromDb().collect { trendingMovieWithGenres ->
+                repository.flowTrendingMoviesFromDb(MEDIACATEGORY.TRENDING).collect { trendingMovieWithGenres ->
                     withContext(Dispatchers.Main) {
                         uiState.update {
                             uiState.value.copy(trendingMovies = trendingMovieWithGenres)
@@ -38,7 +39,7 @@ class MovieHomePageViewModel @Inject constructor(
                 }
             }
             launch(dispatcher) {
-                val networkResponseWrapper: NetworkResponseWrapper<TrendingMoviesResponse>? =
+                val networkResponseWrapper: NetworkResponseWrapper<MediaResponseContainer>? =
                     repository.fetchTrendingMoviesFromNetwork().takeIf { it !is Success }
                 networkResponseWrapper?.let {
                     withContext(Dispatchers.Main) {
@@ -65,7 +66,7 @@ class MovieHomePageViewModel @Inject constructor(
 
     @MainThread
     private fun setNetworkResponseInUiState(
-        fetchTrendingMovies: NetworkResponseWrapper<TrendingMoviesResponse>,
+        fetchTrendingMovies: NetworkResponseWrapper<MediaResponseContainer>,
     ) {
         when (fetchTrendingMovies) {
             is NetworkError -> uiState.update {

@@ -2,9 +2,9 @@ package com.example.showmemovies
 
 import com.example.showmemovies.models.GenreNameIdMappingContainer
 import com.example.showmemovies.models.MovieIdGenreIdMapping
-import com.example.showmemovies.models.MovieModel
+import com.example.showmemovies.models.MediaModel
 import com.example.showmemovies.models.MovieModelWithGenres
-import com.example.showmemovies.models.TrendingMoviesResponse
+import com.example.showmemovies.models.MediaResponseContainer
 import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import com.example.showmemovies.utils.ErrorBody
@@ -31,7 +31,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class MovieHomePageViewModelTest {
 
-    private val movieModel: MovieModel = MovieModel(
+    private val mediaModel: MediaModel = MediaModel(
         false,
         "/44immBwzhDVyjn87b3x3l9mlhAD.jpg",
         934433,
@@ -47,25 +47,25 @@ class MovieHomePageViewModelTest {
         7.374,
         684
     )
-    private val movieModel2 = movieModel.copy(id = 934434, title = "Scream V")
-    private val movieIdGenreIdMappings = listOf(MovieIdGenreIdMapping(movieId = movieModel.id, 1L))
+    private val movieModel2 = mediaModel.copy(id = 934434, title = "Scream V")
+    private val movieIdGenreIdMappings = listOf(MovieIdGenreIdMapping(movieId = mediaModel.id, 1L))
     private val movieIdGenreIdMappings2 =
         listOf(MovieIdGenreIdMapping(movieId = movieModel2.id, 1L))
     private val movieModelWithGenre: MovieModelWithGenres =
-        MovieModelWithGenres(movieModel, movieIdGenreIdMappings)
+        MovieModelWithGenres(mediaModel, movieIdGenreIdMappings)
     private val movieModelWithGenre2: MovieModelWithGenres =
         MovieModelWithGenres(movieModel2, movieIdGenreIdMappings2)
 
     private val data =
-        TrendingMoviesResponse(
+        MediaResponseContainer(
             totalPages = 0,
             totalResults = 0,
             page = 0,
-            movieList = listOf(movieModel)
+            movieList = listOf(mediaModel)
         )
 
     private val data2 =
-        TrendingMoviesResponse(
+        MediaResponseContainer(
             totalPages = 0,
             totalResults = 0,
             page = 0,
@@ -100,7 +100,7 @@ class MovieHomePageViewModelTest {
                 emit(listOf(movieModelWithGenre))
             }
             coEvery { repository.fetchTrendingMoviesFromNetwork() } returns Success(
-                TrendingMoviesResponse(movieList = listOf())
+                MediaResponseContainer(movieList = listOf())
             )
             coEvery { genreRepository.flowGenresFromDb() } returns emptyFlow()
             coEvery { genreRepository.fetchGenreFromNetwork() } returns Success(
@@ -127,7 +127,7 @@ class MovieHomePageViewModelTest {
                 emit(listOf(movieModelWithGenre2))
             }
             coEvery { repository.fetchTrendingMoviesFromNetwork() } returns Success(
-                TrendingMoviesResponse(movieList = listOf())
+                MediaResponseContainer(movieList = listOf())
             )
             coEvery { genreRepository.flowGenresFromDb() } returns emptyFlow()
             coEvery { genreRepository.fetchGenreFromNetwork() } returns Success(

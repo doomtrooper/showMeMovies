@@ -7,9 +7,9 @@ import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
 import com.example.showmemovies.datasource.dao.TrendingMovieDao
 import com.example.showmemovies.models.MovieIdGenreIdMapping
 import com.example.showmemovies.models.GenreNameIdMapping
-import com.example.showmemovies.models.MovieModel
+import com.example.showmemovies.models.MediaModel
 
-@Database(entities = [MovieModel::class, MovieIdGenreIdMapping::class, GenreNameIdMapping::class], version = 1, exportSchema = false)
+@Database(entities = [MediaModel::class, MovieIdGenreIdMapping::class, GenreNameIdMapping::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun trendingMoviesDao(): TrendingMovieDao
     abstract fun movieIdGenreIdMappingDao(): MovieIdGenreIdMappingDao

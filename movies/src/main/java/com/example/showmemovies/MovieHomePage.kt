@@ -109,8 +109,8 @@ private fun MovieCard(
         elevation = 10.dp
     ) {
         AsyncImage(
-            model = "https://image.tmdb.org/t/p/w500/" + movieModelWithGenres.movieModel.posterPath,
-            contentDescription = movieModelWithGenres.movieModel.title,
+            model = "https://image.tmdb.org/t/p/w500/" + movieModelWithGenres.mediaModel.posterPath,
+            contentDescription = movieModelWithGenres.mediaModel.title,
             contentScale = ContentScale.FillWidth
         )
         Box(
@@ -119,7 +119,7 @@ private fun MovieCard(
         ) {
             Column(Modifier.align(alignment = Alignment.BottomStart)) {
                 Text(
-                    text = movieModelWithGenres.movieModel.title,
+                    text = movieModelWithGenres.mediaModel.title,
                     color = Color.White,
                     fontSize = 18.sp,
                     lineHeight = 20.sp,

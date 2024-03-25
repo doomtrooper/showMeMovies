@@ -8,9 +8,9 @@ import com.example.showmemovies.utils.NetworkResponseWrapper
 import com.example.showmemovies.datasource.network.ITendingMoviesNetworkDataSource
 import com.example.showmemovies.datasource.dao.TrendingMovieDao
 import com.example.showmemovies.models.MovieIdGenreIdMapping
-import com.example.showmemovies.models.MovieModel
+import com.example.showmemovies.models.MediaModel
 import com.example.showmemovies.models.MovieModelWithGenres
-import com.example.showmemovies.models.TrendingMoviesResponse
+import com.example.showmemovies.models.MediaResponseContainer
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,7 +35,7 @@ class TrendingMoviesRepositoryTest {
 
     private lateinit var repository: ITrendingMoviesRepository
 
-    private val movieModel: MovieModel = MovieModel(
+    private val mediaModel: MediaModel = MediaModel(
         false,
         "/44immBwzhDVyjn87b3x3l9mlhAD.jpg",
         934433,
@@ -52,13 +52,13 @@ class TrendingMoviesRepositoryTest {
         684
     )
     private val data =
-        TrendingMoviesResponse(
+        MediaResponseContainer(
             totalPages = 0,
             totalResults = 0,
             page = 0,
-            movieList = listOf(movieModel)
+            movieList = listOf(mediaModel)
         )
-    private val movieIdGenreIdMappings = listOf(MovieIdGenreIdMapping(movieId = movieModel.id, 1L))
+    private val movieIdGenreIdMappings = listOf(MovieIdGenreIdMapping(movieId = mediaModel.id, 1L))
     private val errorBody = ErrorBody(statusCode = 500, "API failed", false)
 
     @ExperimentalCoroutinesApi
@@ -77,14 +77,14 @@ class TrendingMoviesRepositoryTest {
 
     @Test
     fun `observe trending movies from db when db is empty`() = runTest {
-        coEvery { trendingMovieDao.fetchTrendingMoviesWithGenre() } returns flow {
+        coEvery { trendingMovieDao.fetchTrendingMoviesWithGenre(mediaCategory) } returns flow {
             emit(listOf())
         }
 
         repository.flowTrendingMoviesFromDb().test {
             val emptyData = awaitItem()
             cancelAndConsumeRemainingEvents()
-            coVerify { trendingMovieDao.fetchTrendingMoviesWithGenre() }
+            coVerify { trendingMovieDao.fetchTrendingMoviesWithGenre(mediaCategory) }
             assert(emptyData.isEmpty())
         }
     }
@@ -93,8 +93,8 @@ class TrendingMoviesRepositoryTest {
     @Test
     fun `observe trending movies from db when db has stale data`() = runTest {
         val modelWithGenres =
-            MovieModelWithGenres(movieModel, genreIdMapping = movieIdGenreIdMappings)
-        coEvery { trendingMovieDao.fetchTrendingMoviesWithGenre() } returns flow {
+            MovieModelWithGenres(mediaModel, genreIdMapping = movieIdGenreIdMappings)
+        coEvery { trendingMovieDao.fetchTrendingMoviesWithGenre(mediaCategory) } returns flow {
             emit(
                 listOf(
                     modelWithGenres
@@ -105,7 +105,7 @@ class TrendingMoviesRepositoryTest {
         repository.flowTrendingMoviesFromDb().test {
             val movieModelWithGenres = awaitItem()
             cancelAndConsumeRemainingEvents()
-            coVerify { trendingMovieDao.fetchTrendingMoviesWithGenre() }
+            coVerify { trendingMovieDao.fetchTrendingMoviesWithGenre(mediaCategory) }
             assert(movieModelWithGenres.isNotEmpty())
             assert(movieModelWithGenres == listOf(modelWithGenres))
         }
@@ -115,13 +115,13 @@ class TrendingMoviesRepositoryTest {
     fun `fetch trending movies from network with success`() = runTest {
         val success = NetworkResponseWrapper.Success(data)
 
-        coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns success
+        coEvery { trendingNetworkDataSource.fetchTrendingMedia() } returns success
         coEvery { trendingMovieDao.updateNewTrendingMovies(data.movieList) } returns Unit
-        coEvery { movieIdGenreIdMappingDao.saveGenreIdsFromMovie(movieModel) } returns Unit
+        coEvery { movieIdGenreIdMappingDao.saveGenreIdsFromMovie(mediaModel) } returns Unit
 
         val fetchTrendingMoviesFromNetwork = repository.fetchTrendingMoviesFromNetwork()
         coVerify { trendingMovieDao.updateNewTrendingMovies(data.movieList) }
-        coVerify { movieIdGenreIdMappingDao.saveGenreIdsFromMovie(movieModel) }
+        coVerify { movieIdGenreIdMappingDao.saveGenreIdsFromMovie(mediaModel) }
         assert(fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.Success)
         if (fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.Success) {
             assert(fetchTrendingMoviesFromNetwork.body == data)
@@ -134,7 +134,7 @@ class TrendingMoviesRepositoryTest {
             errorBody
         )
 
-        coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns serviceError
+        coEvery { trendingNetworkDataSource.fetchTrendingMedia() } returns serviceError
 
         val fetchTrendingMoviesFromNetwork = repository.fetchTrendingMoviesFromNetwork()
         assert(fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.ServiceError)

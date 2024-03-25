@@ -6,20 +6,21 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.example.showmemovies.models.MEDIACATEGORY.*
 import com.google.gson.annotations.SerializedName
 
-data class TrendingMoviesResponse(
+data class MediaResponseContainer(
     val page: Int = 0,
     @SerializedName("results")
-    val movieList: List<MovieModel>,
+    val movieList: List<MediaModel>,
     @SerializedName("total_pages")
     val totalPages: Int = 0,
     @SerializedName("total_results")
     val totalResults: Int = 0,
 )
 
-@Entity(tableName = "tending_movies")
-data class MovieModel(
+@Entity(tableName = "media_model")
+data class MediaModel(
     val adult: Boolean,
 
     @SerializedName("backdrop_path")
@@ -64,6 +65,9 @@ data class MovieModel(
     @ColumnInfo(name = "vote_count")
     @SerializedName("vote_count")
     val voteCount: Long,
+
+    @ColumnInfo(name = "media_category")
+    val mediaCategory: MEDIACATEGORY = UNKNOWN
 ) {
     @Ignore
     @SerializedName("genre_ids")
@@ -94,10 +98,17 @@ data class GenreNameIdMappingContainer(
 )
 
 data class MovieModelWithGenres(
-    @Embedded val movieModel: MovieModel,
+    @Embedded val mediaModel: MediaModel,
     @Relation(
         parentColumn = "id",
         entityColumn = "movie_id"
     )
     val genreIdMapping: List<MovieIdGenreIdMapping>
 )
+
+enum class MEDIACATEGORY {
+    TRENDING,
+    UPCOMING_MOVIE,
+    TOP_RATED_MOVIE,
+    UNKNOWN
+}

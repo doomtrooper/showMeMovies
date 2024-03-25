@@ -97,14 +97,12 @@ class HiltModule {
     @Singleton
     @Provides
     fun providesMovieGenreMappingDao(appDatabase: AppDatabase): MovieIdGenreIdMappingDao {
-        println("providesMovieGenreMappingDao: $appDatabase")
         return appDatabase.movieIdGenreIdMappingDao()
     }
 
     @Singleton
     @Provides
     fun providesGenreMappingDao(appDatabase: AppDatabase): GenreMappingDao {
-        println("providesGenreMappingDao: $appDatabase")
         return appDatabase.genreDao()
     }
 

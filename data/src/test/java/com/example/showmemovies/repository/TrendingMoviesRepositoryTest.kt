@@ -113,9 +113,7 @@ class TrendingMoviesRepositoryTest {
 
     @Test
     fun `fetch trending movies from network with success`() = runTest {
-        val success = NetworkResponseWrapper.Success(
-            data
-        )
+        val success = NetworkResponseWrapper.Success(data)
 
         coEvery { trendingNetworkDataSource.fetchTrendingMovies() } returns success
         coEvery { trendingMovieDao.updateNewTrendingMovies(data.movieList) } returns Unit

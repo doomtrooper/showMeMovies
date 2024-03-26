@@ -116,11 +116,11 @@ class TrendingMoviesRepositoryTest {
         val success = NetworkResponseWrapper.Success(data)
 
         coEvery { trendingNetworkDataSource.fetchTrendingMedia() } returns success
-        coEvery { trendingMovieDao.updateNewTrendingMovies(data.movieList) } returns Unit
+        coEvery { trendingMovieDao.updateNewTrendingMovies(data.movieList, mediaCategory) } returns Unit
         coEvery { movieIdGenreIdMappingDao.saveGenreIdsFromMovie(mediaModel) } returns Unit
 
         val fetchTrendingMoviesFromNetwork = repository.fetchTrendingMoviesFromNetwork()
-        coVerify { trendingMovieDao.updateNewTrendingMovies(data.movieList) }
+        coVerify { trendingMovieDao.updateNewTrendingMovies(data.movieList, mediaCategory) }
         coVerify { movieIdGenreIdMappingDao.saveGenreIdsFromMovie(mediaModel) }
         assert(fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.Success)
         if (fetchTrendingMoviesFromNetwork is NetworkResponseWrapper.Success) {

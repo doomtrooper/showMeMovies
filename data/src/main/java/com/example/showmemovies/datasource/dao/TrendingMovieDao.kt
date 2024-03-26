@@ -18,12 +18,15 @@ interface TrendingMovieDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveAllTrendingMovies(movies: List<MediaModel>)
 
-    @Query("DELETE FROM media_model")
-    suspend fun deleteAll()
+    @Query("DELETE FROM media_model where media_category=:mediaCategory")
+    suspend fun deleteAll(mediaCategory: MEDIACATEGORY)
 
     @Transaction
-    suspend fun updateNewTrendingMovies(movies: List<MediaModel>){
-        deleteAll()
+    suspend fun updateNewTrendingMovies(
+        movies: List<MediaModel>,
+        mediaCategory: MEDIACATEGORY
+    ){
+        deleteAll(mediaCategory)
         saveAllTrendingMovies(movies)
     }
 

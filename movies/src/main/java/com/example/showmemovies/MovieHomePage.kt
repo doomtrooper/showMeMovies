@@ -1,5 +1,6 @@
 package com.example.showmemovies
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -31,6 +34,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
@@ -38,6 +43,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Lifecycle.Event.ON_ANY
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
+import com.example.showmemovies.models.GenreNameIdMapping
+import com.example.showmemovies.models.MediaModel
+import com.example.showmemovies.models.MovieIdGenreIdMapping
 import com.example.showmemovies.models.MovieModelWithGenres
 import kotlin.math.absoluteValue
 
@@ -58,24 +66,91 @@ fun MovieHomePage(state: MovieHomePageUiState) {
         val pagerState = rememberPagerState(pageCount = {
             state.trendingMovies.size
         })
-        HorizontalPager(
-            state = pagerState,
-            pageSpacing = 10.dp,
-            contentPadding = PaddingValues(
-                horizontal = 32.dp,
-                vertical = 8.dp
-            ),
-        ) {
-            MovieCard(
-                movieModelWithGenres = state.trendingMovies[it],
-                pagerState,
-                it,
-                state.genreIdMapping
-            )
+        Box {
+            Column {
+                HorizontalPager(
+                    state = pagerState,
+                    pageSpacing = 10.dp,
+                    contentPadding = PaddingValues(
+                        horizontal = 32.dp,
+                        vertical = 8.dp
+                    ),
+                ) {
+                    MovieCard(
+                        movieModelWithGenres = state.trendingMovies[it],
+                        pagerState,
+                        it,
+                        state.genreIdMapping
+                    )
+                }
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(10.dp)) {
+                    items(state.topRatedMovies.size) {
+                        MediaCard(
+                            movieModelWithGenres = state.topRatedMovies[it],
+                            genreIdMapping = state.genreIdMapping
+                        )
+                    }
+                }
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(10.dp)) {
+                    items(state.topRatedTv.size) {
+                        MediaCard(
+                            movieModelWithGenres = state.topRatedTv[it],
+                            genreIdMapping = state.genreIdMapping
+                        )
+                    }
+                }
+            }
         }
     } else {
         HomeScreen()
     }
+}
+
+
+@Composable
+private fun MediaCard(
+    movieModelWithGenres: MovieModelWithGenres,
+    genreIdMapping: Map<Long, String>
+) {
+    Card(elevation = 2.dp, border = BorderStroke(1.dp, Color.Black)) {
+        Box {
+            Column(Modifier.width(150.dp)) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                ) {
+                    AsyncImage(
+                        model = "https://image.tmdb.org/t/p/w500/" + movieModelWithGenres.mediaModel.posterPath,
+                        contentDescription = movieModelWithGenres.mediaModel.title,
+                        contentScale = ContentScale.FillWidth
+                    )
+                }
+                Box(modifier = Modifier.padding(4.dp)) {
+                    Text(
+                        text = movieModelWithGenres.mediaModel.title,
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        maxLines = 1,
+                        lineHeight = 20.sp,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewMediaCard() {
+    MediaCard(
+        movieModelWithGenres = MovieModelWithGenres(mediaModel, movieIdGenreIdMappings),
+        genreIdMapping = mapOf(1L to "ABCD")
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -124,8 +199,11 @@ private fun MovieCard(
                     fontSize = 18.sp,
                     lineHeight = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    )
-                LazyRow (horizontalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(top = 2.dp)){
+                )
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = PaddingValues(top = 2.dp)
+                ) {
                     items(
                         movieModelWithGenres.genreIdMapping.size,
                         { index -> movieModelWithGenres.genreIdMapping[index].genreId }) {
@@ -141,8 +219,8 @@ private fun MovieCard(
             }
         }
     }
-
 }
+
 
 @Composable
 private fun rememberLifeCycleEvent(): MutableState<Lifecycle.Event> {
@@ -205,3 +283,22 @@ fun GreetingSection(
         }
     }
 }
+
+private val mediaModel: MediaModel = MediaModel(
+    false,
+    "/44immBwzhDVyjn87b3x3l9mlhAD.jpg",
+    934433,
+    "Scream VI",
+    "en",
+    "Scream VI",
+    "Following the latest Ghostface killings, the four survivors leave Woodsboro behind and start a fresh chapter.",
+    "/wDWwtvkRRlgTiUr6TyLSMX8FCuZ.jpg",
+    "movie",
+    609.941,
+    "2023-03-08",
+    false,
+    7.374,
+    684
+)
+
+private val movieIdGenreIdMappings = listOf(MovieIdGenreIdMapping(movieId = mediaModel.id, 1L))

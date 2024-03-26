@@ -7,6 +7,8 @@ data class MovieHomePageUiState(
     val loading: Boolean = true,
     val error: Boolean = false,
     val trendingMovies: List<MovieModelWithGenres> = emptyList(),
+    val topRatedMovies: List<MovieModelWithGenres> = emptyList(),
+    val topRatedTv: List<MovieModelWithGenres> = emptyList(),
     val errorWrapper: ErrorWrapper? = null,
     val genreIdMapping: Map<Long, String> = emptyMap()
 )

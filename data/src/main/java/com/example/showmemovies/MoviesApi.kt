@@ -13,9 +13,9 @@ interface MoviesApi {
     @GET("3/genre/movie/list")
     suspend fun movieGenre(): NetworkResponseWrapper<GenreNameIdMappingContainer>
 
-    @GET("3/movie/top_rated")
+    @GET("3/movie/top_rated?language=en-US")
     suspend fun topRatedMovie(): NetworkResponseWrapper<MediaResponseContainer>
 
-    @GET("3/tv/top_rated")
+    @GET("3/tv/top_rated?language=en-US")
     suspend fun topRatedTv(): NetworkResponseWrapper<MediaResponseContainer>
 }

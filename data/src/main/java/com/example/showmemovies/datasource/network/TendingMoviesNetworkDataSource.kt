@@ -7,13 +7,17 @@ import com.example.showmemovies.models.MediaResponseContainer
 import javax.inject.Inject
 
 interface ITendingMoviesNetworkDataSource {
-    suspend fun fetchTrendingMedia(mediaCategory: MEDIACATEGORY = MEDIACATEGORY.TRENDING): NetworkResponseWrapper<MediaResponseContainer>
+    suspend fun fetchTrendingMedia(mediaCategory: MEDIACATEGORY = MEDIACATEGORY.TRENDING_ALL): NetworkResponseWrapper<MediaResponseContainer>
 }
 
 class TendingMoviesNetworkDataSource @Inject constructor(private val moviesApi: MoviesApi) :
     ITendingMoviesNetworkDataSource {
     override suspend fun fetchTrendingMedia(mediaCategory: MEDIACATEGORY): NetworkResponseWrapper<MediaResponseContainer> {
-       return moviesApi.trendingMedia()
+        return when (mediaCategory) {
+            MEDIACATEGORY.TRENDING_ALL -> moviesApi.trendingMedia()
+            MEDIACATEGORY.TOP_RATED_MOVIE -> moviesApi.topRatedMovie()
+            MEDIACATEGORY.TOP_RATED_TV -> moviesApi.topRatedTv()
+        }
     }
 
 }

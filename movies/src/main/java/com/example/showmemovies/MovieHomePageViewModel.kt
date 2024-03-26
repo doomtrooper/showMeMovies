@@ -29,24 +29,12 @@ class MovieHomePageViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            launch(dispatcher) {
-                repository.flowTrendingMoviesFromDb(MEDIACATEGORY.TRENDING).collect { trendingMovieWithGenres ->
-                    withContext(Dispatchers.Main) {
-                        uiState.update {
-                            uiState.value.copy(trendingMovies = trendingMovieWithGenres)
-                        }
-                    }
-                }
-            }
-            launch(dispatcher) {
-                val networkResponseWrapper: NetworkResponseWrapper<MediaResponseContainer>? =
-                    repository.fetchTrendingMoviesFromNetwork().takeIf { it !is Success }
-                networkResponseWrapper?.let {
-                    withContext(Dispatchers.Main) {
-                        setNetworkResponseInUiState(it)
-                    }
-                }
-            }
+            launch(dispatcher) { observeMedia(MEDIACATEGORY.TRENDING_ALL) }
+            launch(dispatcher) { observeMedia(MEDIACATEGORY.TOP_RATED_MOVIE) }
+            launch(dispatcher) { observeMedia(MEDIACATEGORY.TOP_RATED_TV) }
+            launch(dispatcher) { makeNetworkCall(MEDIACATEGORY.TRENDING_ALL) }
+            launch(dispatcher) { makeNetworkCall(MEDIACATEGORY.TOP_RATED_MOVIE) }
+            launch(dispatcher) { makeNetworkCall(MEDIACATEGORY.TOP_RATED_TV) }
             launch(dispatcher) {
                 genreRepository.flowGenresFromDb().collect { genres ->
                     withContext(Dispatchers.Main) {
@@ -58,10 +46,34 @@ class MovieHomePageViewModel @Inject constructor(
                     }
                 }
             }
-            launch(dispatcher) {
-                genreRepository.fetchGenreFromNetwork()
+            launch(dispatcher) { genreRepository.fetchGenreFromNetwork() }
+        }
+    }
+
+    private suspend fun makeNetworkCall(mediaCategory: MEDIACATEGORY) {
+        val networkResponseWrapper: NetworkResponseWrapper<MediaResponseContainer>? =
+            repository.fetchTrendingMoviesFromNetwork(mediaCategory)
+                .takeIf { it !is Success }
+        networkResponseWrapper?.let {
+            withContext(Dispatchers.Main) {
+                setNetworkResponseInUiState(it)
             }
         }
+    }
+
+    private suspend fun observeMedia(mediaCategory: MEDIACATEGORY) {
+        repository.flowTrendingMoviesFromDb(mediaCategory)
+            .collect { mediaModelsWithGenres ->
+                withContext(Dispatchers.Main) {
+                    uiState.update {
+                        when (mediaCategory) {
+                            MEDIACATEGORY.TRENDING_ALL -> uiState.value.copy(trendingMovies = mediaModelsWithGenres)
+                            MEDIACATEGORY.TOP_RATED_MOVIE -> uiState.value.copy(topRatedMovies = mediaModelsWithGenres)
+                            MEDIACATEGORY.TOP_RATED_TV -> uiState.value.copy(topRatedTv = mediaModelsWithGenres)
+                        }
+                    }
+                }
+            }
     }
 
     @MainThread

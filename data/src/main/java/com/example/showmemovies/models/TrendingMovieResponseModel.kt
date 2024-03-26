@@ -48,7 +48,7 @@ data class MediaModel(
 
     @ColumnInfo(name = "media_type")
     @SerializedName("media_type")
-    val mediaType: String,
+    val mediaType: String?,
 
     val popularity: Double,
 
@@ -67,7 +67,7 @@ data class MediaModel(
     val voteCount: Long,
 
     @ColumnInfo(name = "media_category")
-    val mediaCategory: MEDIACATEGORY = UNKNOWN
+    val mediaCategory: MEDIACATEGORY = TRENDING_ALL
 ) {
     @Ignore
     @SerializedName("genre_ids")
@@ -107,8 +107,7 @@ data class MovieModelWithGenres(
 )
 
 enum class MEDIACATEGORY {
-    TRENDING,
-    UPCOMING_MOVIE,
+    TRENDING_ALL,
     TOP_RATED_MOVIE,
-    UNKNOWN
+    TOP_RATED_TV,
 }

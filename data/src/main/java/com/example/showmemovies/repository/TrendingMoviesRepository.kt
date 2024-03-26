@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 interface ITrendingMoviesRepository {
-    suspend fun flowTrendingMoviesFromDb(mediaCategory: MEDIACATEGORY = MEDIACATEGORY.TRENDING): Flow<List<MovieModelWithGenres>>
-    suspend fun fetchTrendingMoviesFromNetwork(mediaCategory: MEDIACATEGORY = MEDIACATEGORY.TRENDING): NetworkResponseWrapper<MediaResponseContainer>
+    suspend fun flowTrendingMoviesFromDb(mediaCategory: MEDIACATEGORY = MEDIACATEGORY.TRENDING_ALL): Flow<List<MovieModelWithGenres>>
+    suspend fun fetchTrendingMoviesFromNetwork(mediaCategory: MEDIACATEGORY = MEDIACATEGORY.TRENDING_ALL): NetworkResponseWrapper<MediaResponseContainer>
 }
 
 class TrendingMoviesRepository @Inject constructor(
@@ -25,11 +25,18 @@ class TrendingMoviesRepository @Inject constructor(
     }
 
     override suspend fun fetchTrendingMoviesFromNetwork(mediaCategory: MEDIACATEGORY): NetworkResponseWrapper<MediaResponseContainer> {
-        return trendingMoviesNetworkDataSource.fetchTrendingMedia().also {
+        return trendingMoviesNetworkDataSource.fetchTrendingMedia(mediaCategory).also {
             if (it is NetworkResponseWrapper.Success) {
                 trendingMovieDao.updateNewTrendingMovies(it.body.movieList.map { movieModel ->
-                    movieModel.copy(mediaCategory = mediaCategory)
-                })
+                    movieModel.copy(
+                        mediaCategory = mediaCategory,
+                        mediaType = movieModel.mediaType ?: when (mediaCategory) {
+                            MEDIACATEGORY.TRENDING_ALL -> "movie"
+                            MEDIACATEGORY.TOP_RATED_MOVIE -> "movie"
+                            MEDIACATEGORY.TOP_RATED_TV -> "tv"
+                        }
+                    )
+                }, mediaCategory)
                 it.body.movieList.forEach { movieModel ->
                     movieIdGenreIdMappingDao.saveGenreIdsFromMovie(
                         movieModel

@@ -5,14 +5,15 @@ import com.example.showmemovies.datasource.network.ITendingMoviesNetworkDataSour
 import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
 import com.example.showmemovies.datasource.dao.TrendingMovieDao
 import com.example.showmemovies.models.MEDIACATEGORY
+import com.example.showmemovies.models.MEDIACATEGORY.*
 import com.example.showmemovies.models.MovieModelWithGenres
 import com.example.showmemovies.models.MediaResponseContainer
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 interface ITrendingMoviesRepository {
-    suspend fun flowTrendingMoviesFromDb(mediaCategory: MEDIACATEGORY = MEDIACATEGORY.TRENDING_ALL): Flow<List<MovieModelWithGenres>>
-    suspend fun fetchTrendingMoviesFromNetwork(mediaCategory: MEDIACATEGORY = MEDIACATEGORY.TRENDING_ALL): NetworkResponseWrapper<MediaResponseContainer>
+    suspend fun flowTrendingMoviesFromDb(mediaCategory: MEDIACATEGORY = TRENDING_ALL): Flow<List<MovieModelWithGenres>>
+    suspend fun fetchTrendingMoviesFromNetwork(mediaCategory: MEDIACATEGORY = TRENDING_ALL): NetworkResponseWrapper<MediaResponseContainer>
 }
 
 class TrendingMoviesRepository @Inject constructor(
@@ -31,9 +32,8 @@ class TrendingMoviesRepository @Inject constructor(
                     movieModel.copy(
                         mediaCategory = mediaCategory,
                         mediaType = movieModel.mediaType ?: when (mediaCategory) {
-                            MEDIACATEGORY.TRENDING_ALL -> "movie"
-                            MEDIACATEGORY.TOP_RATED_MOVIE -> "movie"
-                            MEDIACATEGORY.TOP_RATED_TV -> "tv"
+                            TRENDING_ALL, TOP_RATED_MOVIE, POPULAR_MOVIE -> "movie"
+                            TOP_RATED_TV, POPULAR_TV -> "tv"
                         }
                     )
                 }, mediaCategory)

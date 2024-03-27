@@ -18,4 +18,12 @@ interface MoviesApi {
 
     @GET("3/tv/top_rated?language=en-US")
     suspend fun topRatedTv(): NetworkResponseWrapper<MediaResponseContainer>
+
+    @GET("3/movie/popular?language=en-US")
+    suspend fun popularMovie(): NetworkResponseWrapper<MediaResponseContainer>
+
+    @GET("3/tv/popular?language=en-US")
+    suspend fun popularTv(): NetworkResponseWrapper<MediaResponseContainer>
+
+
 }

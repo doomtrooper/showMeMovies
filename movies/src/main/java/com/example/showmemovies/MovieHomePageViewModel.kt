@@ -4,6 +4,7 @@ import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.showmemovies.models.MEDIACATEGORY
+import com.example.showmemovies.models.MEDIACATEGORY.*
 import com.example.showmemovies.utils.NetworkResponseWrapper.*
 import com.example.showmemovies.models.MediaResponseContainer
 import com.example.showmemovies.repository.IGenreRepository
@@ -29,12 +30,16 @@ class MovieHomePageViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            launch(dispatcher) { observeMedia(MEDIACATEGORY.TRENDING_ALL) }
-            launch(dispatcher) { observeMedia(MEDIACATEGORY.TOP_RATED_MOVIE) }
-            launch(dispatcher) { observeMedia(MEDIACATEGORY.TOP_RATED_TV) }
-            launch(dispatcher) { makeNetworkCall(MEDIACATEGORY.TRENDING_ALL) }
-            launch(dispatcher) { makeNetworkCall(MEDIACATEGORY.TOP_RATED_MOVIE) }
-            launch(dispatcher) { makeNetworkCall(MEDIACATEGORY.TOP_RATED_TV) }
+            launch(dispatcher) { observeMedia(TRENDING_ALL) }
+            launch(dispatcher) { observeMedia(TOP_RATED_MOVIE) }
+            launch(dispatcher) { observeMedia(TOP_RATED_TV) }
+            launch(dispatcher) { observeMedia(POPULAR_MOVIE) }
+            launch(dispatcher) { observeMedia(POPULAR_TV) }
+            launch(dispatcher) { makeNetworkCall(TRENDING_ALL) }
+            launch(dispatcher) { makeNetworkCall(TOP_RATED_MOVIE) }
+            launch(dispatcher) { makeNetworkCall(TOP_RATED_TV) }
+            launch(dispatcher) { makeNetworkCall(POPULAR_MOVIE) }
+            launch(dispatcher) { makeNetworkCall(POPULAR_TV) }
             launch(dispatcher) {
                 genreRepository.flowGenresFromDb().collect { genres ->
                     withContext(Dispatchers.Main) {
@@ -67,9 +72,11 @@ class MovieHomePageViewModel @Inject constructor(
                 withContext(Dispatchers.Main) {
                     uiState.update {
                         when (mediaCategory) {
-                            MEDIACATEGORY.TRENDING_ALL -> uiState.value.copy(trendingMovies = mediaModelsWithGenres)
-                            MEDIACATEGORY.TOP_RATED_MOVIE -> uiState.value.copy(topRatedMovies = mediaModelsWithGenres)
-                            MEDIACATEGORY.TOP_RATED_TV -> uiState.value.copy(topRatedTv = mediaModelsWithGenres)
+                            TRENDING_ALL -> uiState.value.copy(trendingMovies = mediaModelsWithGenres)
+                            TOP_RATED_MOVIE -> uiState.value.copy(topRatedMovies = mediaModelsWithGenres)
+                            TOP_RATED_TV -> uiState.value.copy(topRatedTv = mediaModelsWithGenres)
+                            POPULAR_TV -> uiState.value.copy(popularTv = mediaModelsWithGenres)
+                            POPULAR_MOVIE -> uiState.value.copy(popularMovies = mediaModelsWithGenres)
                         }
                     }
                 }

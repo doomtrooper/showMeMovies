@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -29,10 +30,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Cyan
+import androidx.compose.ui.graphics.Color.Companion.Magenta
+import androidx.compose.ui.graphics.Color.Companion.Yellow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,39 +72,142 @@ fun MovieHomePage(state: MovieHomePageUiState) {
         val pagerState = rememberPagerState(pageCount = {
             state.trendingMovies.size
         })
+        val gradientColors = listOf(Cyan, Magenta, Yellow)
+
         Box {
-            Column {
-                HorizontalPager(
-                    state = pagerState,
-                    pageSpacing = 10.dp,
-                    contentPadding = PaddingValues(
-                        horizontal = 32.dp,
-                        vertical = 8.dp
-                    ),
-                ) {
-                    MovieCard(
-                        movieModelWithGenres = state.trendingMovies[it],
-                        pagerState,
-                        it,
-                        state.genreIdMapping
+            LazyColumn {
+                item {
+                    Text(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(10.dp),
+                        text = "Trending Movies",
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
+                        )
                     )
                 }
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(10.dp)) {
-                    items(state.topRatedMovies.size) {
-                        MediaCard(
-                            movieModelWithGenres = state.topRatedMovies[it],
-                            genreIdMapping = state.genreIdMapping
+                item {
+                    HorizontalPager(
+                        state = pagerState,
+                        pageSpacing = 10.dp,
+                        contentPadding = PaddingValues(
+                            horizontal = 32.dp,
+                            vertical = 8.dp
+                        ),
+                    ) {
+                        MovieCard(
+                            movieModelWithGenres = state.trendingMovies[it],
+                            pagerState,
+                            it,
+                            state.genreIdMapping
                         )
                     }
                 }
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(10.dp)) {
-                    items(state.topRatedTv.size) {
-                        MediaCard(
-                            movieModelWithGenres = state.topRatedTv[it],
-                            genreIdMapping = state.genreIdMapping
+                item {
+                    Text(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(10.dp),
+                        text = "Top rated Movies",
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
                         )
+                    )
+                }
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(10.dp)
+                    ) {
+                        items(state.topRatedMovies.size) {
+                            MediaCard(
+                                movieModelWithGenres = state.topRatedMovies[it],
+                                genreIdMapping = state.genreIdMapping
+                            )
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(10.dp),
+                        text = "Top rated Tv",
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
+                        )
+                    )
+                }
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(10.dp)
+                    ) {
+                        items(state.topRatedTv.size) {
+                            MediaCard(
+                                movieModelWithGenres = state.topRatedTv[it],
+                                genreIdMapping = state.genreIdMapping
+                            )
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(10.dp),
+                        text = "Popular movies",
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
+                        )
+                    )
+                }
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(10.dp)
+                    ) {
+                        items(state.popularMovies.size) {
+                            MediaCard(
+                                movieModelWithGenres = state.popularMovies[it],
+                                genreIdMapping = state.genreIdMapping
+                            )
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(10.dp),
+                        text = "Popular TV",
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
+                        )
+                    )
+                }
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(10.dp)
+                    ) {
+                        items(state.popularTv.size) {
+                            MediaCard(
+                                movieModelWithGenres = state.popularTv[it],
+                                genreIdMapping = state.genreIdMapping
+                            )
+                        }
                     }
                 }
             }

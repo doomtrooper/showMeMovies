@@ -17,6 +17,8 @@ class TendingMoviesNetworkDataSource @Inject constructor(private val moviesApi: 
             MEDIACATEGORY.TRENDING_ALL -> moviesApi.trendingMedia()
             MEDIACATEGORY.TOP_RATED_MOVIE -> moviesApi.topRatedMovie()
             MEDIACATEGORY.TOP_RATED_TV -> moviesApi.topRatedTv()
+            MEDIACATEGORY.POPULAR_TV -> moviesApi.popularTv()
+            MEDIACATEGORY.POPULAR_MOVIE -> moviesApi.popularMovie()
         }
     }
 

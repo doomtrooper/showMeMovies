@@ -33,4 +33,8 @@ interface TrendingMovieDao {
     @Transaction
     @Query("SELECT * FROM media_model where media_category=:mediaCategory")
     fun fetchTrendingMoviesWithGenre(mediaCategory: MEDIACATEGORY): Flow<List<MovieModelWithGenres>>
+
+    @Transaction
+    @Query("SELECT * FROM media_model")
+    fun fetchAllMoviesWithGenre(): Flow<List<MovieModelWithGenres>>
 }

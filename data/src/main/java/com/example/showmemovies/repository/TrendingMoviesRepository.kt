@@ -8,12 +8,19 @@ import com.example.showmemovies.models.MEDIACATEGORY
 import com.example.showmemovies.models.MEDIACATEGORY.*
 import com.example.showmemovies.models.MovieModelWithGenres
 import com.example.showmemovies.models.MediaResponseContainer
+import com.example.showmemovies.utils.Result
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 
 interface ITrendingMoviesRepository {
-    suspend fun flowTrendingMoviesFromDb(mediaCategory: MEDIACATEGORY = TRENDING_ALL): Flow<List<MovieModelWithGenres>>
+    suspend fun flowTrendingMoviesFromDb(): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>>
     suspend fun fetchTrendingMoviesFromNetwork(mediaCategory: MEDIACATEGORY = TRENDING_ALL): NetworkResponseWrapper<MediaResponseContainer>
+
 }
 
 class TrendingMoviesRepository @Inject constructor(
@@ -21,8 +28,16 @@ class TrendingMoviesRepository @Inject constructor(
     private val trendingMovieDao: TrendingMovieDao,
     private val movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao
 ) : ITrendingMoviesRepository {
-    override suspend fun flowTrendingMoviesFromDb(mediaCategory: MEDIACATEGORY): Flow<List<MovieModelWithGenres>> {
-        return trendingMovieDao.fetchTrendingMoviesWithGenre(mediaCategory)
+    override suspend fun flowTrendingMoviesFromDb(): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>> {
+        return merge(
+            trendingMovieDao.fetchAllMoviesWithGenre().distinctUntilChanged().map { Result.Success(it) },
+            flow {
+                enumValues<MEDIACATEGORY>().forEach {
+                    emit(fetchTrendingMoviesFromNetwork(it))
+                }
+            }.filter { it !is NetworkResponseWrapper.Success }.map {
+                Result.Error(it)
+            })
     }
 
     override suspend fun fetchTrendingMoviesFromNetwork(mediaCategory: MEDIACATEGORY): NetworkResponseWrapper<MediaResponseContainer> {

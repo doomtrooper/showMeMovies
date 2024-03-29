@@ -3,13 +3,13 @@ package com.example.showmemovies
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.showmemovies.models.MEDIACATEGORY
 import com.example.showmemovies.models.MEDIACATEGORY.*
 import com.example.showmemovies.utils.NetworkResponseWrapper.*
 import com.example.showmemovies.models.MediaResponseContainer
 import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.ITrendingMoviesRepository
 import com.example.showmemovies.utils.NetworkResponseWrapper
+import com.example.showmemovies.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -30,16 +30,7 @@ class MovieHomePageViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            launch(dispatcher) { observeMedia(TRENDING_ALL) }
-            launch(dispatcher) { observeMedia(TOP_RATED_MOVIE) }
-            launch(dispatcher) { observeMedia(TOP_RATED_TV) }
-            launch(dispatcher) { observeMedia(POPULAR_MOVIE) }
-            launch(dispatcher) { observeMedia(POPULAR_TV) }
-            launch(dispatcher) { makeNetworkCall(TRENDING_ALL) }
-            launch(dispatcher) { makeNetworkCall(TOP_RATED_MOVIE) }
-            launch(dispatcher) { makeNetworkCall(TOP_RATED_TV) }
-            launch(dispatcher) { makeNetworkCall(POPULAR_MOVIE) }
-            launch(dispatcher) { makeNetworkCall(POPULAR_TV) }
+            launch(dispatcher) { observeMedia() }
             launch(dispatcher) {
                 genreRepository.flowGenresFromDb().collect { genres ->
                     withContext(Dispatchers.Main) {
@@ -55,31 +46,25 @@ class MovieHomePageViewModel @Inject constructor(
         }
     }
 
-    private suspend fun makeNetworkCall(mediaCategory: MEDIACATEGORY) {
-        val networkResponseWrapper: NetworkResponseWrapper<MediaResponseContainer>? =
-            repository.fetchTrendingMoviesFromNetwork(mediaCategory)
-                .takeIf { it !is Success }
-        networkResponseWrapper?.let {
-            withContext(Dispatchers.Main) {
-                setNetworkResponseInUiState(it)
-            }
-        }
-    }
-
-    private suspend fun observeMedia(mediaCategory: MEDIACATEGORY) {
-        repository.flowTrendingMoviesFromDb(mediaCategory)
-            .collect { mediaModelsWithGenres ->
-                withContext(Dispatchers.Main) {
-                    uiState.update {
-                        when (mediaCategory) {
-                            TRENDING_ALL -> uiState.value.copy(trendingMovies = mediaModelsWithGenres)
-                            TOP_RATED_MOVIE -> uiState.value.copy(topRatedMovies = mediaModelsWithGenres)
-                            TOP_RATED_TV -> uiState.value.copy(topRatedTv = mediaModelsWithGenres)
-                            POPULAR_TV -> uiState.value.copy(popularTv = mediaModelsWithGenres)
-                            POPULAR_MOVIE -> uiState.value.copy(popularMovies = mediaModelsWithGenres)
+    private suspend fun observeMedia() {
+        repository.flowTrendingMoviesFromDb()
+            .collect { result ->
+                when (result) {
+                    is Result.Error -> setNetworkResponseInUiState(result.body)
+                    is Result.Success -> {
+                        uiState.update {
+                            uiState.value.copy(
+                                all = result.body,
+                                trendingMovies = result.body.filter { it.mediaModel.mediaCategory == TRENDING_ALL },
+                                topRatedMovies = result.body.filter { it.mediaModel.mediaCategory == TOP_RATED_MOVIE },
+                                topRatedTv = result.body.filter { it.mediaModel.mediaCategory == TOP_RATED_TV },
+                                popularMovies = result.body.filter { it.mediaModel.mediaCategory == POPULAR_MOVIE },
+                                popularTv = result.body.filter { it.mediaModel.mediaCategory == POPULAR_TV },
+                            )
                         }
                     }
                 }
+
             }
     }
 

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -41,7 +40,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
@@ -49,10 +47,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Lifecycle.Event.ON_ANY
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
-import com.example.showmemovies.models.GenreNameIdMapping
-import com.example.showmemovies.models.MediaModel
-import com.example.showmemovies.models.MovieIdGenreIdMapping
 import com.example.showmemovies.models.MovieModelWithGenres
+import com.example.showmemovies.models.TvModelWithGenres
 import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -151,8 +147,8 @@ fun MovieHomePage(state: MovieHomePageUiState) {
                         contentPadding = PaddingValues(10.dp)
                     ) {
                         items(state.topRatedTv.size) {
-                            MediaCard(
-                                movieModelWithGenres = state.topRatedTv[it],
+                            TvMediaCard(
+                                tvModelWithGenres = state.topRatedTv[it],
                                 genreIdMapping = state.genreIdMapping
                             )
                         }
@@ -203,8 +199,60 @@ fun MovieHomePage(state: MovieHomePageUiState) {
                         contentPadding = PaddingValues(10.dp)
                     ) {
                         items(state.popularTv.size) {
+                            TvMediaCard(
+                                tvModelWithGenres = state.popularTv[it],
+                                genreIdMapping = state.genreIdMapping
+                            )
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(10.dp),
+                        text = "Trending movies",
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
+                        )
+                    )
+                }
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(10.dp)
+                    ) {
+                        items(state.popularMovies.size) {
                             MediaCard(
-                                movieModelWithGenres = state.popularTv[it],
+                                movieModelWithGenres = state.trendingMovies[it],
+                                genreIdMapping = state.genreIdMapping
+                            )
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(10.dp),
+                        text = "Trending TV",
+                        style = TextStyle(
+                            brush = Brush.linearGradient(
+                                colors = gradientColors
+                            )
+                        )
+                    )
+                }
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(10.dp)
+                    ) {
+                        items(state.popularTv.size) {
+                            TvMediaCard(
+                                tvModelWithGenres = state.trendingTv[it],
                                 genreIdMapping = state.genreIdMapping
                             )
                         }
@@ -253,14 +301,42 @@ private fun MediaCard(
     }
 }
 
-@Preview
+
 @Composable
-private fun PreviewMediaCard() {
-    MediaCard(
-        movieModelWithGenres = MovieModelWithGenres(mediaModel, movieIdGenreIdMappings),
-        genreIdMapping = mapOf(1L to "ABCD")
-    )
+private fun TvMediaCard(
+    tvModelWithGenres: TvModelWithGenres,
+    genreIdMapping: Map<Long, String>
+) {
+    Card(elevation = 2.dp, border = BorderStroke(1.dp, Color.Black)) {
+        Box {
+            Column(Modifier.width(150.dp)) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                ) {
+                    AsyncImage(
+                        model = "https://image.tmdb.org/t/p/w500/" + tvModelWithGenres.mediaModel.posterPath,
+                        contentDescription = tvModelWithGenres.mediaModel.title,
+                        contentScale = ContentScale.FillWidth
+                    )
+                }
+                Box(modifier = Modifier.padding(4.dp)) {
+                    Text(
+                        text = tvModelWithGenres.mediaModel.title,
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        maxLines = 1,
+                        lineHeight = 20.sp,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+            }
+        }
+    }
 }
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -392,22 +468,3 @@ fun GreetingSection(
         }
     }
 }
-
-private val mediaModel: MediaModel = MediaModel(
-    false,
-    "/44immBwzhDVyjn87b3x3l9mlhAD.jpg",
-    934433,
-    "Scream VI",
-    "en",
-    "Scream VI",
-    "Following the latest Ghostface killings, the four survivors leave Woodsboro behind and start a fresh chapter.",
-    "/wDWwtvkRRlgTiUr6TyLSMX8FCuZ.jpg",
-    "movie",
-    609.941,
-    "2023-03-08",
-    false,
-    7.374,
-    684
-)
-
-private val movieIdGenreIdMappings = listOf(MovieIdGenreIdMapping(movieId = mediaModel.id, 1L))

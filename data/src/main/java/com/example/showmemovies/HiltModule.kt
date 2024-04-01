@@ -3,16 +3,27 @@ package com.example.showmemovies
 import android.content.Context
 import androidx.room.Room
 import com.example.showmemovies.datasource.dao.GenreMappingDao
+import com.example.showmemovies.datasource.dao.MediaCategoryDao
+import com.example.showmemovies.datasource.dao.MovieDao
+import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
+import com.example.showmemovies.datasource.dao.TvDao
+import com.example.showmemovies.datasource.dao.TvGenreMappingDao
+import com.example.showmemovies.datasource.dao.TvIdGenreIdMappingDao
+import com.example.showmemovies.datasource.dao.TvMediaCategoryDao
 import com.example.showmemovies.datasource.network.GenreNetworkDataSource
 import com.example.showmemovies.datasource.network.IGenreNetworkDataSource
 import com.example.showmemovies.datasource.network.ITendingMoviesNetworkDataSource
-import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
+import com.example.showmemovies.datasource.network.ITvGenreNetworkDataSource
 import com.example.showmemovies.datasource.network.TendingMoviesNetworkDataSource
-import com.example.showmemovies.datasource.dao.TrendingMovieDao
+import com.example.showmemovies.datasource.network.TvGenreNetworkDataSource
+import com.example.showmemovies.models.MEDIACATEGORY
+import com.example.showmemovies.models.TVMEDIACATEGORY
 import com.example.showmemovies.repository.GenreRepository
 import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.ITrendingMoviesRepository
+import com.example.showmemovies.repository.ITvGenreRepository
 import com.example.showmemovies.repository.TrendingMoviesRepository
+import com.example.showmemovies.repository.TvGenreRepository
 import com.example.showmemovies.utils.NetworkResponseWrapperCallAdapterFactory
 import dagger.Module
 import dagger.Provides
@@ -21,7 +32,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import okhttp3.EventListener
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -90,9 +100,20 @@ class HiltModule {
 
     @Singleton
     @Provides
-    fun trendingMoviesDao(appDatabase: AppDatabase): TrendingMovieDao {
-        println("trendingMoviesDao: $appDatabase")
-        return appDatabase.trendingMoviesDao()
+    fun moviesDao(appDatabase: AppDatabase): MovieDao {
+        return appDatabase.moviesDao()
+    }
+
+    @Singleton
+    @Provides
+    fun tvDao(appDatabase: AppDatabase): TvDao {
+        return appDatabase.tvDao()
+    }
+
+    @Singleton
+    @Provides
+    fun mediaCategory(appDatabase: AppDatabase): MediaCategoryDao {
+        return appDatabase.mediaCategoryDao()
     }
 
     @Singleton
@@ -116,12 +137,80 @@ class HiltModule {
 
     @Singleton
     @Provides
+    fun provideFeedMovieMediaApiMapper(moviesApi: MoviesApi): FeedApiMapper {
+        return FeedApiMapper(
+            enumValues<MEDIACATEGORY>().associateWith {
+                when (it) {
+                    MEDIACATEGORY.TRENDING_MOVIE -> suspend { moviesApi.trendingMovie() }
+                    MEDIACATEGORY.TOP_RATED_MOVIE -> suspend { moviesApi.popularMovie() }
+                    MEDIACATEGORY.POPULAR_MOVIE -> suspend { moviesApi.topRatedMovie() }
+                    MEDIACATEGORY.UPCOMING_MOVIE -> suspend { moviesApi.topRatedMovie() }
+                }
+            },
+            enumValues<TVMEDIACATEGORY>().associateWith {
+                when (it) {
+                    TVMEDIACATEGORY.TRENDING_TV -> suspend { moviesApi.trendingTv() }
+                    TVMEDIACATEGORY.POPULAR_TV -> suspend { moviesApi.popularTv() }
+                    TVMEDIACATEGORY.TOP_RATED_TV -> suspend { moviesApi.topRatedTv() }
+                }
+            }
+        )
+    }
+
+    @Singleton
+    @Provides
+    fun providesTvIdGenreIdMappingDao(appDatabase: AppDatabase): TvIdGenreIdMappingDao {
+        return appDatabase.tvIdGenreIdMappingDao()
+    }
+
+    @Singleton
+    @Provides
+    fun providesTvMediaCategoryDao(appDatabase: AppDatabase): TvMediaCategoryDao {
+        return appDatabase.tvMediaCategoryDao()
+    }
+
+    @Singleton
+    @Provides
     fun repository(
         trendingDataSource: ITendingMoviesNetworkDataSource,
-        trendingMovieDao: TrendingMovieDao,
-        movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao
+        movieDao: MovieDao,
+        tvDao: TvDao,
+        mediaCategoryDao: MediaCategoryDao,
+        tvMediaCategoryDao: TvMediaCategoryDao,
+        movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao,
+        tvIdGenreIdMappingDao: TvIdGenreIdMappingDao,
+        feedApiMapper: FeedApiMapper,
     ): ITrendingMoviesRepository =
-        TrendingMoviesRepository(trendingDataSource, trendingMovieDao, movieIdGenreIdMappingDao)
+        TrendingMoviesRepository(
+            trendingDataSource,
+            movieDao,
+            tvDao,
+            mediaCategoryDao,
+            tvMediaCategoryDao,
+            movieIdGenreIdMappingDao,
+            tvIdGenreIdMappingDao,
+            feedApiMapper
+        )
+
+
+    @Singleton
+    @Provides
+    fun providesTvGenreNetworkDatasource(moviesApi: MoviesApi): ITvGenreNetworkDataSource {
+        return TvGenreNetworkDataSource(moviesApi)
+    }
+
+    @Singleton
+    @Provides
+    fun providesTvGenreDao(appDatabase: AppDatabase) = appDatabase.tvGenreDao()
+
+    @Singleton
+    @Provides
+    fun providesTvGenreRepository(
+        genreNetworkDataSource: ITvGenreNetworkDataSource,
+        tvGenreDao: TvGenreMappingDao
+    ): ITvGenreRepository {
+        return TvGenreRepository(genreNetworkDataSource, tvGenreDao)
+    }
 
     @Singleton
     @Provides

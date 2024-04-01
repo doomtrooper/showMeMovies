@@ -6,8 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.showmemovies.models.MEDIACATEGORY.*
 import com.example.showmemovies.utils.NetworkResponseWrapper.*
 import com.example.showmemovies.models.MediaResponseContainer
+import com.example.showmemovies.models.MovieModelWithGenres
+import com.example.showmemovies.models.TVMEDIACATEGORY
+import com.example.showmemovies.models.TVMEDIACATEGORY.*
+import com.example.showmemovies.models.TvMediaResponseContainer
+import com.example.showmemovies.models.TvModelWithGenres
 import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.ITrendingMoviesRepository
+import com.example.showmemovies.repository.ITvGenreRepository
 import com.example.showmemovies.utils.NetworkResponseWrapper
 import com.example.showmemovies.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MovieHomePageViewModel @Inject constructor(
     private val repository: ITrendingMoviesRepository,
+    private val tvGenreRepository: ITvGenreRepository,
     private val genreRepository: IGenreRepository,
     @IODispatcher private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -31,6 +38,7 @@ class MovieHomePageViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             launch(dispatcher) { observeMedia() }
+            launch(dispatcher) { observeTvMedia() }
             launch(dispatcher) {
                 genreRepository.flowGenresFromDb().collect { genres ->
                     withContext(Dispatchers.Main) {
@@ -42,30 +50,84 @@ class MovieHomePageViewModel @Inject constructor(
                     }
                 }
             }
-            launch(dispatcher) { genreRepository.fetchGenreFromNetwork() }
-        }
-    }
-
-    private suspend fun observeMedia() {
-        repository.flowTrendingMoviesFromDb()
-            .collect { result ->
-                when (result) {
-                    is Result.Error -> setNetworkResponseInUiState(result.body)
-                    is Result.Success -> {
+            launch(dispatcher) {
+                tvGenreRepository.flowTvGenresFromDb().collect { genres ->
+                    withContext(Dispatchers.Main) {
                         uiState.update {
                             uiState.value.copy(
-                                all = result.body,
-                                trendingMovies = result.body.filter { it.mediaModel.mediaCategory == TRENDING_ALL },
-                                topRatedMovies = result.body.filter { it.mediaModel.mediaCategory == TOP_RATED_MOVIE },
-                                topRatedTv = result.body.filter { it.mediaModel.mediaCategory == TOP_RATED_TV },
-                                popularMovies = result.body.filter { it.mediaModel.mediaCategory == POPULAR_MOVIE },
-                                popularTv = result.body.filter { it.mediaModel.mediaCategory == POPULAR_TV },
+                                tvGenreIdMapping = genres.associate { it.genreId to it.genreName }
                             )
                         }
                     }
                 }
-
             }
+            launch(dispatcher) { genreRepository.fetchGenreFromNetwork() }
+            launch(dispatcher) { tvGenreRepository.fetchTvGenreFromNetwork() }
+        }
+    }
+
+    private suspend fun observeMedia() {
+        repository.flowTrendingMoviesFromDb().collect { result ->
+            when (result) {
+                is Result.Error -> setNetworkResponseInUiState(result.body)
+                is Result.Success -> {
+                    val trendingMovies = mutableListOf<MovieModelWithGenres>()
+                    val upcomingMovies = mutableListOf<MovieModelWithGenres>()
+                    val topRatedMovies = mutableListOf<MovieModelWithGenres>()
+                    val popularMovies = mutableListOf<MovieModelWithGenres>()
+                    result.body.forEach { movieModelWithGenre: MovieModelWithGenres ->
+                        movieModelWithGenre.mediaCategoryMapping.forEach {
+                            when (it.category) {
+                                POPULAR_MOVIE -> popularMovies.add(movieModelWithGenre)
+                                TRENDING_MOVIE -> trendingMovies.add(movieModelWithGenre)
+                                TOP_RATED_MOVIE -> topRatedMovies.add(movieModelWithGenre)
+                                UPCOMING_MOVIE -> upcomingMovies.add(movieModelWithGenre)
+                            }
+                        }
+                    }
+                    uiState.update {
+                        uiState.value.copy(
+                            topRatedMovies = topRatedMovies,
+                            upcomingMovies = upcomingMovies,
+                            trendingMovies = trendingMovies,
+                            popularMovies = popularMovies
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun observeTvMedia() {
+        repository.flowTvMediaFromDb().collect { result ->
+            when (result) {
+                is Result.Success -> {
+                    val trendingTvMedia = mutableListOf<TvModelWithGenres>()
+                    val topRatedTvMedia = mutableListOf<TvModelWithGenres>()
+                    val popularTvMedia = mutableListOf<TvModelWithGenres>()
+                    result.body.forEach { movieModelWithGenre: TvModelWithGenres ->
+                        movieModelWithGenre.mediaCategoryMapping.forEach {
+                            when (it.category) {
+                                POPULAR_TV -> popularTvMedia.add(movieModelWithGenre)
+                                TRENDING_TV -> trendingTvMedia.add(movieModelWithGenre)
+                                TOP_RATED_TV -> topRatedTvMedia.add(movieModelWithGenre)
+                            }
+                        }
+                    }
+                    uiState.update {
+                        uiState.value.copy(
+                            topRatedTv = topRatedTvMedia,
+                            trendingTv = trendingTvMedia,
+                            popularTv = popularTvMedia
+                        )
+                    }
+                }
+
+                is Result.Error -> {
+
+                }
+            }
+        }
     }
 
     @MainThread

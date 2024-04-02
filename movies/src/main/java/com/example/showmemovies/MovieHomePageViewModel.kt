@@ -25,7 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MovieHomePageViewModel @Inject constructor(
-    private val repository: IHomeFeedsRepository,
+    private val homeFeedsRepository: IHomeFeedsRepository,
     private val tvGenreRepository: ITvGenreRepository,
     private val genreRepository: IGenreRepository,
     @IODispatcher private val dispatcher: CoroutineDispatcher,
@@ -35,36 +35,50 @@ class MovieHomePageViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            launch(dispatcher) { observeMedia() }
-            launch(dispatcher) { observeTvMedia() }
-            launch(dispatcher) {
-                genreRepository.flowGenresFromDb().collect { genres ->
-                    withContext(Dispatchers.Main) {
-                        uiState.update {
-                            uiState.value.copy(
-                                genreIdMapping = genres.associate { it.genreId to it.genreName }
-                            )
-                        }
-                    }
-                }
-            }
-            launch(dispatcher) {
-                tvGenreRepository.flowTvGenresFromDb().collect { genres ->
-                    withContext(Dispatchers.Main) {
-                        uiState.update {
-                            uiState.value.copy(
-                                tvGenreIdMapping = genres.associate { it.genreId to it.genreName }
-                            )
-                        }
-                    }
-                }
-            }
-            launch(dispatcher) { genreRepository.fetchGenreFromNetwork() }
-            launch(dispatcher) { tvGenreRepository.fetchTvGenreFromNetwork() }
+            launch(dispatcher) { observeMedia(homeFeedsRepository) }
+            launch(dispatcher) { observeTvMedia(homeFeedsRepository) }
+            launch(dispatcher) { observeMovieGenreData(genreRepository) }
+            launch(dispatcher) { observeTvMediaGenreData(tvGenreRepository) }
         }
     }
 
-    private suspend fun observeMedia() {
+    private suspend fun observeTvMediaGenreData(tvGenreRepository: ITvGenreRepository) {
+        tvGenreRepository.flowTvGenresFromDb().collect { genres ->
+            withContext(Dispatchers.Main) {
+                when (genres) {
+                    is Result.Success -> {
+                        uiState.update {
+                            uiState.value.copy(
+                                tvGenreIdMapping = genres.body.associate { it.genreId to it.genreName }
+                            )
+                        }
+                    }
+
+                    is Result.Error -> {}
+                }
+            }
+        }
+    }
+
+    private suspend fun observeMovieGenreData(genreRepository: IGenreRepository) {
+        genreRepository.flowGenresFromDb().collect { genres ->
+            withContext(Dispatchers.Main) {
+                when (genres) {
+                    is Result.Success -> {
+                        uiState.update {
+                            uiState.value.copy(
+                                genreIdMapping = genres.body.associate { it.genreId to it.genreName }
+                            )
+                        }
+                    }
+
+                    is Result.Error -> {}
+                }
+            }
+        }
+    }
+
+    private suspend fun observeMedia(repository: IHomeFeedsRepository) {
         repository.flowTrendingMoviesFromDb().collect { result ->
             when (result) {
                 is Result.Error -> setNetworkResponseInUiState(result.body)
@@ -96,7 +110,7 @@ class MovieHomePageViewModel @Inject constructor(
         }
     }
 
-    private suspend fun observeTvMedia() {
+    private suspend fun observeTvMedia(repository: IHomeFeedsRepository) {
         repository.flowTvMediaFromDb().collect { result ->
             when (result) {
                 is Result.Success -> {

@@ -1,4 +1,4 @@
-package com.example.showmemovies
+package com.example.showmemovies.utils
 
 import com.example.showmemovies.models.MEDIACATEGORY
 import com.example.showmemovies.models.MediaResponseContainer

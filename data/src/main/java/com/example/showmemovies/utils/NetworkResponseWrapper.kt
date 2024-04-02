@@ -14,15 +14,10 @@ import java.io.IOException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
-sealed interface Result<out S: Any, out E: Any>{
-    data class Success<S : Any>(val body: S): Result<S, Nothing>
-    data class Error<E: Any>(val body: E): Result<Nothing, E>
-}
-
-sealed interface NetworkResponseWrapper<out S : Any> {
+sealed interface NetworkResponseWrapper<out S> {
     data class ServiceError(val errorBody: ErrorBody) : NetworkResponseWrapper<Nothing>
     data class NetworkError(val t: Throwable?) : NetworkResponseWrapper<Nothing>
-    data class Success<S : Any>(val body: S) : NetworkResponseWrapper<S>
+    data class Success<S>(val body: S) : NetworkResponseWrapper<S>
     data class UnknownError(val t: Throwable?) : NetworkResponseWrapper<Nothing>
 }
 

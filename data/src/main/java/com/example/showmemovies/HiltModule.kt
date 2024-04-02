@@ -24,6 +24,7 @@ import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.IHomeFeedsRepository
 import com.example.showmemovies.repository.ITvGenreRepository
 import com.example.showmemovies.repository.TvGenreRepository
+import com.example.showmemovies.utils.FeedApiMapper
 import com.example.showmemovies.utils.NetworkResponseWrapperCallAdapterFactory
 import dagger.Module
 import dagger.Provides

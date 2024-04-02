@@ -1,6 +1,6 @@
 package com.example.showmemovies.repository
 
-import com.example.showmemovies.FeedApiMapper
+import com.example.showmemovies.utils.FeedApiMapper
 import com.example.showmemovies.datasource.dao.MediaCategoryDao
 import com.example.showmemovies.datasource.dao.MovieDao
 import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
@@ -95,14 +95,14 @@ class HomeFeedsRepository @Inject constructor(
             mediaCategory,
             suspend { trendingMoviesNetworkDataSource.fetchTrendingTv() }).invoke().also {
             if (it is NetworkResponseWrapper.Success) {
-                tvDao.saveAllTrendingTvMedia(it.body.movieList)
-                tvMediaCategoryDao.saveGenreIdsFromTvMedia(it.body.movieList.map { mediaModel ->
+                tvDao.saveAllTrendingTvMedia(it.body.tvModelList)
+                tvMediaCategoryDao.saveGenreIdsFromTvMedia(it.body.tvModelList.map { mediaModel ->
                     TvMediaIdMediaCategoryMapping(
                         mediaModel.id,
                         mediaCategory
                     )
                 })
-                it.body.movieList.forEach { movieModel ->
+                it.body.tvModelList.forEach { movieModel ->
                     tvIdGenreIdMappingDao.saveGenreIdsFromTvMedia(
                         movieModel
                     )

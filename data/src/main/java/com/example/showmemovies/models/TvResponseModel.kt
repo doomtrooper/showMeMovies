@@ -11,7 +11,7 @@ import com.google.gson.annotations.SerializedName
 data class TvMediaResponseContainer(
     val page: Int = 0,
     @SerializedName("results")
-    val movieList: List<TvModel>,
+    val tvModelList: List<TvModel>,
     @SerializedName("total_pages")
     val totalPages: Int = 0,
     @SerializedName("total_results")
@@ -70,10 +70,6 @@ data class TvModelWithGenres(
 data class TvModel(
     val adult: Boolean,
 
-    @SerializedName("backdrop_path")
-    @ColumnInfo(name = "backdrop_path")
-    val backdropPath: String,
-
     @PrimaryKey val id: Long,
 
     @SerializedName(value = "title", alternate = ["name"])
@@ -113,4 +109,8 @@ data class TvModel(
     @Ignore
     @SerializedName("genre_ids")
     val genreIds: List<Long> = listOf()
+
+    @SerializedName("backdrop_path")
+    @ColumnInfo(name = "backdrop_path")
+    var backdropPath: String? = null
 }

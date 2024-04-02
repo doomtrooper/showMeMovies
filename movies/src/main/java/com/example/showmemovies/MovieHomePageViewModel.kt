@@ -7,12 +7,10 @@ import com.example.showmemovies.models.MEDIACATEGORY.*
 import com.example.showmemovies.utils.NetworkResponseWrapper.*
 import com.example.showmemovies.models.MediaResponseContainer
 import com.example.showmemovies.models.MovieModelWithGenres
-import com.example.showmemovies.models.TVMEDIACATEGORY
 import com.example.showmemovies.models.TVMEDIACATEGORY.*
-import com.example.showmemovies.models.TvMediaResponseContainer
 import com.example.showmemovies.models.TvModelWithGenres
 import com.example.showmemovies.repository.IGenreRepository
-import com.example.showmemovies.repository.ITrendingMoviesRepository
+import com.example.showmemovies.repository.IHomeFeedsRepository
 import com.example.showmemovies.repository.ITvGenreRepository
 import com.example.showmemovies.utils.NetworkResponseWrapper
 import com.example.showmemovies.utils.Result
@@ -27,7 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MovieHomePageViewModel @Inject constructor(
-    private val repository: ITrendingMoviesRepository,
+    private val repository: IHomeFeedsRepository,
     private val tvGenreRepository: ITvGenreRepository,
     private val genreRepository: IGenreRepository,
     @IODispatcher private val dispatcher: CoroutineDispatcher,

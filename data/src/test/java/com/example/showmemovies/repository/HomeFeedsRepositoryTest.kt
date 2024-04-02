@@ -23,7 +23,7 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TrendingMoviesRepositoryTest {
+class HomeFeedsRepositoryTest {
     @MockK
     private lateinit var movieDao: MovieDao
 
@@ -33,7 +33,7 @@ class TrendingMoviesRepositoryTest {
     @MockK
     private lateinit var trendingNetworkDataSource: ITendingMoviesNetworkDataSource
 
-    private lateinit var repository: ITrendingMoviesRepository
+    private lateinit var repository: IHomeFeedsRepository
 
     private val mediaModel: MediaModel = MediaModel(
         false,
@@ -68,7 +68,7 @@ class TrendingMoviesRepositoryTest {
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        repository = TrendingMoviesRepository(
+        repository = HomeFeedsRepository(
             trendingNetworkDataSource,
             movieDao,
             movieIdGenreIdMappingDao

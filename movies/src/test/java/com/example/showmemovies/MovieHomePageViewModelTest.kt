@@ -6,7 +6,7 @@ import com.example.showmemovies.models.MediaModel
 import com.example.showmemovies.models.MovieModelWithGenres
 import com.example.showmemovies.models.MediaResponseContainer
 import com.example.showmemovies.repository.IGenreRepository
-import com.example.showmemovies.repository.ITrendingMoviesRepository
+import com.example.showmemovies.repository.IHomeFeedsRepository
 import com.example.showmemovies.utils.ErrorBody
 import com.example.showmemovies.utils.NetworkResponseWrapper.ServiceError
 import com.example.showmemovies.utils.NetworkResponseWrapper.Success
@@ -76,7 +76,7 @@ class MovieHomePageViewModelTest {
     private val errorBody = ErrorBody(statusCode = 500, "API failed", false)
 
     @MockK
-    lateinit var repository: ITrendingMoviesRepository
+    lateinit var repository: IHomeFeedsRepository
 
     @MockK
     lateinit var genreRepository: IGenreRepository

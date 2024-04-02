@@ -26,13 +26,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 
-interface ITrendingMoviesRepository {
+interface IHomeFeedsRepository {
     suspend fun flowTrendingMoviesFromDb(): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>>
     suspend fun flowTvMediaFromDb(): Flow<Result<List<TvModelWithGenres>, NetworkResponseWrapper<TvMediaResponseContainer>>>
 
 }
 
-class TrendingMoviesRepository @Inject constructor(
+class HomeFeedsRepository @Inject constructor(
     private val trendingMoviesNetworkDataSource: ITendingMoviesNetworkDataSource,
     private val movieDao: MovieDao,
     private val tvDao: TvDao,
@@ -41,7 +41,7 @@ class TrendingMoviesRepository @Inject constructor(
     private val movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao,
     private val tvIdGenreIdMappingDao: TvIdGenreIdMappingDao,
     private val feedApiMapper: FeedApiMapper,
-) : ITrendingMoviesRepository {
+) : IHomeFeedsRepository {
     override suspend fun flowTrendingMoviesFromDb(): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>> {
         return merge(
             movieDao.fetchAllMoviesWithGenre().distinctUntilChanged().map { Result.Success(it) },

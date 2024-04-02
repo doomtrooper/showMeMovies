@@ -18,11 +18,11 @@ import com.example.showmemovies.datasource.network.TendingMoviesNetworkDataSourc
 import com.example.showmemovies.datasource.network.TvGenreNetworkDataSource
 import com.example.showmemovies.models.MEDIACATEGORY
 import com.example.showmemovies.models.TVMEDIACATEGORY
+import com.example.showmemovies.repository.HomeFeedsRepository
 import com.example.showmemovies.repository.GenreRepository
 import com.example.showmemovies.repository.IGenreRepository
-import com.example.showmemovies.repository.ITrendingMoviesRepository
+import com.example.showmemovies.repository.IHomeFeedsRepository
 import com.example.showmemovies.repository.ITvGenreRepository
-import com.example.showmemovies.repository.TrendingMoviesRepository
 import com.example.showmemovies.repository.TvGenreRepository
 import com.example.showmemovies.utils.NetworkResponseWrapperCallAdapterFactory
 import dagger.Module
@@ -171,7 +171,7 @@ class HiltModule {
 
     @Singleton
     @Provides
-    fun repository(
+    fun providesHomeFeedsRepository(
         trendingDataSource: ITendingMoviesNetworkDataSource,
         movieDao: MovieDao,
         tvDao: TvDao,
@@ -180,8 +180,8 @@ class HiltModule {
         movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao,
         tvIdGenreIdMappingDao: TvIdGenreIdMappingDao,
         feedApiMapper: FeedApiMapper,
-    ): ITrendingMoviesRepository =
-        TrendingMoviesRepository(
+    ): IHomeFeedsRepository =
+        HomeFeedsRepository(
             trendingDataSource,
             movieDao,
             tvDao,

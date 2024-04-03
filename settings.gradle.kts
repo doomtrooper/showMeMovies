@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "ShowMeMovies"
-include ':app'
-include ':movies'
-include ':data'
+include(":app")
+include(":movies")
+include(":data")

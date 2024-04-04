@@ -1,4 +1,5 @@
 object ConfigurationData {
+    const val testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     const val applicationId = "com.example.showmemovies"
     const val namespace = "com.example.showmemovies"
     const val compileSdk = 34

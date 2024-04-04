@@ -77,7 +77,7 @@ fun MovieHomePage(state: MovieHomePageUiState) {
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(10.dp),
-                        text = "Trending Movies",
+                        text = "Upcoming Movies",
                         style = TextStyle(
                             brush = Brush.linearGradient(
                                 colors = gradientColors

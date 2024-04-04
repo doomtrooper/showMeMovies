@@ -1,8 +1,8 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp")
-    id("com.google.dagger.hilt.android")
+    id(Plugins.AndoridGradlePlugin)
+    id(Plugins.AndoridKotlinPlugin)
+    id(Plugins.AndoridKspPlugin)
+    id(Plugins.AndoridHiltPlugin)
 }
 
 android {
@@ -16,7 +16,7 @@ android {
         versionCode = ConfigurationData.versionCode
         versionName = ConfigurationData.versionName
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = ConfigurationData.testInstrumentationRunner
     }
 
     buildTypes {
@@ -68,11 +68,11 @@ dependencies {
     // https://developer.android.com/jetpack/compose/state
     implementation(Libs.AndroidX.LifeCycle.Compose)
 
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation(Libs.AndroidX.Core.ktx)
+    implementation(Libs.AndroidX.appcompat)
+
+    testImplementation(TestLibs.jUnit)
+    androidTestImplementation(TestLibs.andoridXTestJunit)
 
     //hilt
     implementation(Libs.Google.Hilt.Android)

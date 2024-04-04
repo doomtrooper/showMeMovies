@@ -1,19 +1,18 @@
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp")
+    id(Plugins.AndoridLib)
+    id(Plugins.AndoridKotlinPlugin)
+    id(Plugins.AndoridKspPlugin)
+    id(Plugins.AndoridHiltPlugin)
 }
 
 android {
-    namespace = "com.example.showmemovies"
+    namespace = ConfigurationData.namespace
     compileSdk = 34
 
     defaultConfig {
         minSdk = 24
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
+        testInstrumentationRunner = ConfigurationData.testInstrumentationRunner
     }
 
     buildTypes {
@@ -38,40 +37,39 @@ android {
 }
 
 dependencies {
-
     implementation(project(":data"))
-    val mockkVersion = "1.13.10"
 
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    // Optional -- Mockito framework
-    testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
-    val composeVersion = "1.6.4"
+    implementation(Libs.AndroidX.Core.ktx)
+    implementation(Libs.AndroidX.appcompat)
+
+    testImplementation(TestLibs.jUnit)
+    androidTestImplementation(TestLibs.andoridXTestJunit)
+    testImplementation(TestLibs.mockk)
+    testImplementation(TestLibs.kotlinCoroutinesTest)
 
     /**
      * Compose
      */
     // Fundamental components of compose UI needed to interact with the device, including layout, drawing, and input.
-    implementation("androidx.compose.ui:ui:$composeVersion")
+    implementation(Libs.AndroidX.Compose.Ui)
     // Build Jetpack Compose UIs with ready to use Material Design Components.
     // This is the higher level entry point of Compose, designed to provide components that match those described at www.material.io.
-    implementation("androidx.compose.material:material:$composeVersion")
+    implementation(Libs.AndroidX.Compose.Material)
+    implementation(Libs.AndroidX.Compose.ToolingPreview)
+    // Fundamental components of compose UI needed to interact with the device, including layout, drawing, and input.
+    // Build Jetpack Compose UIs with ready to use Material Design Components.
+    // This is the higher level entry point of Compose, designed to provide components that match those described at www.material.io.
     // Write Jetpack Compose applications with ready to use building blocks
     // and extend foundation to build your own design system pieces.
-    implementation("androidx.compose.foundation:foundation:$composeVersion")
-    implementation("androidx.compose.ui:ui-tooling-preview-android:$composeVersion")
-    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(Libs.AndroidX.Compose.Foundation)
+
+    implementation(Libs.coil)
     // ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation(Libs.AndroidX.LifeCycle.viewmodelKtx)
 
     //hilt
-    implementation("com.google.dagger:hilt-android:2.49")
-    ksp("com.google.dagger:hilt-compiler:2.49")
+    implementation(Libs.Google.Hilt.Android)
+    ksp(Libs.Google.Hilt.Compiler)
 
-    implementation("com.jakewharton.timber:timber:5.0.1")
 }
 

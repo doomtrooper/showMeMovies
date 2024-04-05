@@ -10,6 +10,7 @@ object Versions {
     const val room = "2.6.1"
     const val retrofit = "2.9.0"
     const val viewModel = "2.7.0"
+    const val kotlinCompilerExtensionVersion = "1.5.11"
 }
 
 object Libs {

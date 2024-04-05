@@ -3,9 +3,6 @@ buildscript {
     repositories {
         google()
     }
-    dependencies {
-        classpath("com.android.tools.build:gradle:4.0.2")
-    }
 }
 
 plugins {

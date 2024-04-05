@@ -52,7 +52,6 @@ dependencies {
     androidTestImplementation(TestLibs.andoridXTestJunit)
 
     // Optional -- Mockito framework
-    val mockkVersion = "1.13.10"
     testImplementation(TestLibs.mockk)
     testImplementation(TestLibs.kotlinCoroutinesTest)
     testImplementation(TestLibs.turbine)

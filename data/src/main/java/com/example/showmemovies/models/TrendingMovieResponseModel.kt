@@ -93,7 +93,8 @@ data class GenreNameIdMappingContainer(
     val genres: List<GenreNameIdMapping>
 )
 
-data class MovieModelWithGenres(
+data class
+MovieModelWithGenres(
     @Embedded val mediaModel: MediaModel,
     @Relation(
         parentColumn = "id",

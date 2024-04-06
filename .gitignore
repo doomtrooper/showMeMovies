@@ -78,3 +78,6 @@ app/release/output.json
 
 # Android Profiling
 *.hprof
+
+# Local build cache
+build-cache

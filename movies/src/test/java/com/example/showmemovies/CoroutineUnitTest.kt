@@ -37,7 +37,7 @@ class CoroutineUnitTest {
             println(Thread.currentThread().name)
             val firstCoroutine = withContext(Dispatchers.IO) {
                 println("firstCoroutine: "+Thread.currentThread().name)
-                delay(10000)
+                delay(500)
                 "abc"
             }
             println("1")
@@ -56,13 +56,13 @@ class CoroutineUnitTest {
             println(Thread.currentThread().name)
             val firstCoroutineDeferred = async(Dispatchers.IO) {
                 println("firstCoroutine: "+Thread.currentThread().name)
-                delay(10000)
+                delay(500)
                 "abc"
             }
             println("1")
             val secondCoroutineDeferred = async(Dispatchers.Default) {
                 println("secondCoroutine: "+Thread.currentThread().name)
-                delay(1000)
+                delay(100)
                 "xyz"
             }
             println(secondCoroutineDeferred.await())
@@ -74,17 +74,19 @@ class CoroutineUnitTest {
     fun test4(){
         runBlocking {
             println(Thread.currentThread().name)
-            async(Dispatchers.IO) {
-                println("firstCoroutine: "+Thread.currentThread().name)
-                delay(10000)
+            val stringDeferred = async(Dispatchers.IO) {
+                println("firstCoroutine: " + Thread.currentThread().name)
+                delay(500)
                 "abc"
             }
             println("1")
-            async(Dispatchers.Default) {
-                println("secondCoroutine: "+Thread.currentThread().name)
-                delay(1000)
+            val stringDeferred1 = async(Dispatchers.Default) {
+                println("secondCoroutine: " + Thread.currentThread().name)
+                delay(100)
                 "xyz"
             }
+            println(stringDeferred.await())
+            println(stringDeferred1.await())
         }
     }
 }

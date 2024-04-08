@@ -65,7 +65,7 @@ data class MediaModel(
 ) {
     @Ignore
     @SerializedName("genre_ids")
-    val genreIds: List<Long> = listOf()
+    var genreIds: List<Long> = listOf()
 }
 
 @Entity(tableName = "movie_id_genre_id_mapping", primaryKeys = ["movie_id", "genre_id"])

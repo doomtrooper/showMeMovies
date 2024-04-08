@@ -87,5 +87,6 @@ object TestLibs{
     const val mockk = "io.mockk:mockk:1.13.10"
     const val kotlinCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0"
     const val turbine = "app.cash.turbine:turbine:1.1.0"
+    const val androidXTestRunner = "androidx.test:runner:1.5.2"
 
 }

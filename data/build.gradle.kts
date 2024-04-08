@@ -35,7 +35,6 @@ dependencies {
     implementation(Libs.AndroidX.Room.roomKtx)
     // To use Kotlin Symbol Processing (KSP)
     ksp(Libs.AndroidX.Room.roomCompiler)
-    testImplementation(Libs.AndroidX.Room.roomTesting)
 
     // retrofit
     implementation(Libs.Square.Retrofit.retrofit)
@@ -48,11 +47,14 @@ dependencies {
 
     implementation(Libs.AndroidX.Core.ktx)
 
+    //Tests
     testImplementation(TestLibs.jUnit)
     androidTestImplementation(TestLibs.andoridXTestJunit)
-
-    // Optional -- Mockito framework
     testImplementation(TestLibs.mockk)
     testImplementation(TestLibs.kotlinCoroutinesTest)
+    androidTestImplementation(TestLibs.kotlinCoroutinesTest)
     testImplementation(TestLibs.turbine)
+    androidTestImplementation(TestLibs.turbine)
+    androidTestImplementation(TestLibs.androidXTestRunner)
+    testImplementation(Libs.AndroidX.Room.roomTesting)
 }

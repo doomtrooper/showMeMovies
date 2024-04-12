@@ -1,6 +1,7 @@
 package com.example.showmemovies
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.Manifest.permission.POST_NOTIFICATIONS
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -8,6 +9,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomAppBar
@@ -38,10 +40,12 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private var serviceStarted = false
-    private val readFineLocation = ACCESS_FINE_LOCATION
-    private var locationPermissionResult =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
+    private val readFineLocationPermission = ACCESS_FINE_LOCATION
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val postNotificationPermission = POST_NOTIFICATIONS
+    private var activityResultLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionsMap ->
+            if (true == permissionsMap[readFineLocationPermission]){
                 toggleService(serviceStarted)
             }
         }
@@ -90,7 +94,11 @@ class MainActivity : ComponentActivity() {
             }
             this.serviceStarted = !this.serviceStarted
         } else {
-            locationPermissionResult.launch(readFineLocation)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                activityResultLauncher.launch(arrayOf(readFineLocationPermission, postNotificationPermission))
+            }else{
+                activityResultLauncher.launch(arrayOf(readFineLocationPermission))
+            }
         }
     }
 }

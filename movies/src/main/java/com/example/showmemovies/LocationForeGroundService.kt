@@ -126,6 +126,12 @@ class LocationForeGroundService : Service() {
         return resultCode == ConnectionResult.SUCCESS
     }
 
+    /*
+    * Each Handler instance is associated with a single thread and that thread's message queue.
+    * When you create a new Handler it is bound to a Looper.
+    * It will deliver messages and runnables to that Looper's message queue
+    * and execute them on that Looper's thread.
+     */
     inner class ServiceHandler(looper: Looper) : Handler(looper) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)

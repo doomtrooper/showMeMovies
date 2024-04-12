@@ -54,7 +54,6 @@ import kotlin.math.absoluteValue
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MovieHomePage(state: MovieHomePageUiState) {
-    println(state)
     /*
     val lifeCycleEvent = rememberLifeCycleEvent()
     println("mutableLifeCycleEvent: ${lifeCycleEvent.value}")

@@ -41,6 +41,7 @@ dependencies {
 
     implementation(Libs.AndroidX.Core.ktx)
     implementation(Libs.AndroidX.appcompat)
+    implementation(Libs.Google.PlayServicesLocation)
 
     testImplementation(TestLibs.jUnit)
     androidTestImplementation(TestLibs.andoridXTestJunit)

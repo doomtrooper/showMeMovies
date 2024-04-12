@@ -3,6 +3,7 @@ package com.example.showmemovies
 import android.content.Context
 import androidx.room.Room
 import com.example.showmemovies.datasource.dao.GenreMappingDao
+import com.example.showmemovies.datasource.dao.LocationDao
 import com.example.showmemovies.datasource.dao.MediaCategoryDao
 import com.example.showmemovies.datasource.dao.MovieDao
 import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
@@ -127,6 +128,12 @@ class HiltModule {
     @Provides
     fun providesGenreMappingDao(appDatabase: AppDatabase): GenreMappingDao {
         return appDatabase.genreDao()
+    }
+
+    @Singleton
+    @Provides
+    fun providesLocationDao(appDatabase: AppDatabase): LocationDao {
+        return appDatabase.locationDao()
     }
 
     @Singleton

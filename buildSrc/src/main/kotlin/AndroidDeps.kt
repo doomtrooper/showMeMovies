@@ -11,12 +11,14 @@ object Versions {
     const val retrofit = "2.9.0"
     const val viewModel = "2.7.0"
     const val kotlinCompilerExtensionVersion = "1.5.11"
+    const val playServicesVersion = "21.2.0"
 }
 
 object Libs {
     const val coil = "io.coil-kt:coil-compose:2.6.0"
+
     object AndroidX {
-        const val appcompat = "androidx.appcompat:appcompat:"+Versions.appCompat
+        const val appcompat = "androidx.appcompat:appcompat:" + Versions.appCompat
 
         object Navigation {
             const val FragmentKtx =
@@ -41,18 +43,19 @@ object Libs {
 
         object LifeCycle {
             const val Compose = "androidx.lifecycle:lifecycle-runtime-compose:" + Versions.lifeCycle
-            const val viewmodelKtx = "androidx.lifecycle:lifecycle-viewmodel-ktx:" + Versions.viewModel
+            const val viewmodelKtx =
+                "androidx.lifecycle:lifecycle-viewmodel-ktx:" + Versions.viewModel
         }
 
-        object Core{
-            const val ktx = "androidx.core:core-ktx:" +Versions.coreVersion
+        object Core {
+            const val ktx = "androidx.core:core-ktx:" + Versions.coreVersion
         }
 
-        object Room{
-            const val room = "androidx.room:room-runtime:"+Versions.room
-            const val roomKtx = "androidx.room:room-ktx:"+Versions.room
-            const val roomCompiler = "androidx.room:room-compiler:"+Versions.room
-            const val roomTesting = "androidx.room:room-testing:"+Versions.room
+        object Room {
+            const val room = "androidx.room:room-runtime:" + Versions.room
+            const val roomKtx = "androidx.room:room-ktx:" + Versions.room
+            const val roomCompiler = "androidx.room:room-compiler:" + Versions.room
+            const val roomTesting = "androidx.room:room-testing:" + Versions.room
         }
     }
 
@@ -61,16 +64,19 @@ object Libs {
             const val Android = "com.google.dagger:hilt-android:" + Versions.hiltGoogle
             const val Compiler = "com.google.dagger:hilt-compiler:" + Versions.hiltGoogle
         }
+
+        const val PlayServicesLocation =
+            "com.google.android.gms:play-services-location:" + Versions.playServicesVersion
     }
 
     object Square {
-        object Retrofit{
-            const val retrofit = "com.squareup.retrofit2:retrofit:"+Versions.retrofit
-            const val retrofitGson = "com.squareup.retrofit2:converter-gson:"+Versions.retrofit
+        object Retrofit {
+            const val retrofit = "com.squareup.retrofit2:retrofit:" + Versions.retrofit
+            const val retrofitGson = "com.squareup.retrofit2:converter-gson:" + Versions.retrofit
         }
     }
 
-    object OkHttp{
+    object OkHttp {
         const val okHttpLogging = "com.squareup.okhttp3:logging-interceptor:4.11.0"
     }
 }
@@ -81,7 +87,7 @@ object DebugLibs {
     }
 }
 
-object TestLibs{
+object TestLibs {
     const val jUnit = "junit:junit:4.13.2"
     const val andoridXTestJunit = "androidx.test.ext:junit:1.1.5"
     const val mockk = "io.mockk:mockk:1.13.10"

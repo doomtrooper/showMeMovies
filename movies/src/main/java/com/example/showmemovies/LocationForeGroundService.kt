@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Binder
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -20,13 +21,20 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.example.showmemovies.datasource.dao.LocationDao
+import com.example.showmemovies.models.LocationModel
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -40,9 +48,14 @@ class LocationForeGroundService : Service() {
     private var locationHandlerThread: HandlerThread? = null
     private var locationHandler: Handler? = null
     private var locationLooper: Looper? = null
+    private val job = SupervisorJob()
+    private val coroutineScope = CoroutineScope(job + Dispatchers.IO)
+    private var sharedLocationFlow: MutableSharedFlow<LocationModel> = MutableSharedFlow()
+    private var binder: LocalBinder? = LocalBinder(sharedLocationFlow)
+
 
     override fun onBind(p0: Intent?): IBinder? {
-        return null
+        return binder
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -85,7 +98,23 @@ class LocationForeGroundService : Service() {
     }
 
     private fun setFusedLocationCallback() {
-        locationCallback = MyLocationCallback(locationDao)
+        locationCallback = MyLocationCallback { onLocation(it) }
+    }
+
+    private fun onLocation(locationResult: LocationResult) {
+        for (location in locationResult.locations) {
+            println(location.toString())
+            locationDao.insertLocation(
+                LocationModel(
+                    latitude = location.latitude,
+                    longitude = location.longitude
+                ).also {
+                    coroutineScope.launch {
+                        sharedLocationFlow.emit(it)
+                    }
+                }
+            )
+        }
     }
 
     override fun onDestroy() {
@@ -156,6 +185,10 @@ class LocationForeGroundService : Service() {
                 }
             }
         }
+    }
+
+    class LocalBinder(private val locationFlow : MutableSharedFlow<LocationModel>) : Binder() {
+        fun getLocationFlow(): MutableSharedFlow<LocationModel> = locationFlow
     }
 
 }

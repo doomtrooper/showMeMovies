@@ -2,10 +2,15 @@ package com.example.showmemovies
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.Manifest.permission.POST_NOTIFICATIONS
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,7 +22,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +37,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /*
 * Once Hilt is set up in your Application class and an application-level component is available,
@@ -41,11 +51,38 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private var serviceStarted = false
     private val readFineLocationPermission = ACCESS_FINE_LOCATION
+    private val job = SupervisorJob()
+    private val coroutineScope = CoroutineScope(job + Dispatchers.IO)
+    private var mBound: Boolean = false
+
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val postNotificationPermission = POST_NOTIFICATIONS
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as LocationForeGroundService.LocalBinder
+            coroutineScope.launch {
+                binder.getLocationFlow().collect {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            it.toString(),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+            mBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            mBound = false
+        }
+
+    }
     private var activityResultLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionsMap ->
-            if (true == permissionsMap[readFineLocationPermission]){
+            if (true == permissionsMap[readFineLocationPermission]) {
                 toggleService(serviceStarted)
             }
         }
@@ -56,8 +93,11 @@ class MainActivity : ComponentActivity() {
             Scaffold(
                 bottomBar = {
                     BottomAppBar {
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(Icons.Filled.Check, contentDescription = "Localized description")
+                        IconButton(onClick = { bindToLocationService() }) {
+                            Icon(
+                                Icons.Filled.AddCircle,
+                                contentDescription = "Localized description"
+                            )
                         }
                         IconButton(onClick = {
                             toggleService(serviceStarted)
@@ -71,6 +111,17 @@ class MainActivity : ComponentActivity() {
                 }
             ) {
                 MyApp(it)
+            }
+        }
+    }
+
+    private fun bindToLocationService() {
+        if (mBound) {
+            unbindService(serviceConnection)
+            mBound= false
+        } else {
+            Intent(this@MainActivity, LocationForeGroundService::class.java).also {
+                bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
             }
         }
     }
@@ -90,15 +141,32 @@ class MainActivity : ComponentActivity() {
                     this@MainActivity.startService(intent)
                 }
             } else {
+                if(mBound){
+                    unbindService(serviceConnection)
+                    mBound = false
+                }
                 this@MainActivity.stopService(intent)
             }
             this.serviceStarted = !this.serviceStarted
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                activityResultLauncher.launch(arrayOf(readFineLocationPermission, postNotificationPermission))
-            }else{
+                activityResultLauncher.launch(
+                    arrayOf(
+                        readFineLocationPermission,
+                        postNotificationPermission
+                    )
+                )
+            } else {
                 activityResultLauncher.launch(arrayOf(readFineLocationPermission))
             }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (mBound){
+            unbindService(serviceConnection)
+            mBound = false
         }
     }
 }

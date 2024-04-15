@@ -5,16 +5,9 @@ import com.example.showmemovies.models.LocationModel
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 
-class MyLocationCallback(private val locationDao: LocationDao): LocationCallback() {
+class MyLocationCallback(private val onLocation: (locationResult: LocationResult) -> Unit) :
+    LocationCallback() {
     override fun onLocationResult(locationResult: LocationResult) {
-        for (location in locationResult.locations) {
-            println(location.toString())
-            locationDao.insertLocation(
-                LocationModel(
-                    latitude = location.latitude,
-                    longitude = location.longitude
-                )
-            )
-        }
+        this.onLocation(locationResult)
     }
 }

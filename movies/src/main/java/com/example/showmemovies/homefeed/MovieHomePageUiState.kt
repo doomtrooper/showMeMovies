@@ -1,4 +1,4 @@
-package com.example.showmemovies
+package com.example.showmemovies.homefeed
 
 import com.example.showmemovies.models.MovieModelWithGenres
 import com.example.showmemovies.models.TvModelWithGenres

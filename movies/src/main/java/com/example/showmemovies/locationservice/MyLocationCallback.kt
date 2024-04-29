@@ -1,4 +1,4 @@
-package com.example.showmemovies
+package com.example.showmemovies.locationservice
 
 import com.example.showmemovies.datasource.dao.LocationDao
 import com.example.showmemovies.models.LocationModel

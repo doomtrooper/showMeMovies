@@ -1,6 +1,5 @@
 package com.example.showmemovies.repository
 
-import com.example.showmemovies.utils.FeedApiMapper
 import com.example.showmemovies.datasource.dao.MediaCategoryDao
 import com.example.showmemovies.datasource.dao.MovieDao
 import com.example.showmemovies.datasource.dao.MovieIdGenreIdMappingDao
@@ -16,9 +15,10 @@ import com.example.showmemovies.models.TVMEDIACATEGORY
 import com.example.showmemovies.models.TvMediaIdMediaCategoryMapping
 import com.example.showmemovies.models.TvMediaResponseContainer
 import com.example.showmemovies.models.TvModelWithGenres
+import com.example.showmemovies.utils.FeedApiMapper
 import com.example.showmemovies.utils.NetworkResponseWrapper
-import com.example.showmemovies.utils.Result
 import kotlinx.coroutines.flow.Flow
+import com.example.showmemovies.utils.Result
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
@@ -26,13 +26,19 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 
-interface IHomeFeedsRepository {
-    suspend fun flowTrendingMoviesFromDb(): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>>
-    suspend fun flowTvMediaFromDb(): Flow<Result<List<TvModelWithGenres>, NetworkResponseWrapper<TvMediaResponseContainer>>>
+interface IMediaListRepository {
+    fun flowMoviesFromDb(
+        mediaCategory: MEDIACATEGORY,
+        page: Int = 1
+    ): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>>
 
+    fun flowTvMediaFromDb(
+        tvMediaCategory: TVMEDIACATEGORY,
+        page: Int = 1
+    ): Flow<Result<List<TvModelWithGenres>, NetworkResponseWrapper<TvMediaResponseContainer>>>
 }
 
-class HomeFeedsRepository @Inject constructor(
+class MediaListRepository @Inject constructor(
     private val trendingMoviesNetworkDataSource: ITendingMoviesNetworkDataSource,
     private val movieDao: MovieDao,
     private val tvDao: TvDao,
@@ -41,37 +47,43 @@ class HomeFeedsRepository @Inject constructor(
     private val movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao,
     private val tvIdGenreIdMappingDao: TvIdGenreIdMappingDao,
     private val feedApiMapper: FeedApiMapper,
-) : IHomeFeedsRepository {
-    override suspend fun flowTrendingMoviesFromDb(): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>> {
+) : IMediaListRepository {
+    override fun flowMoviesFromDb(
+        mediaCategory: MEDIACATEGORY,
+        page: Int
+    ): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>> {
         return merge(
-            movieDao.fetchAllMoviesWithGenre().distinctUntilChanged().map { Result.Success(it) },
+            movieDao.fetchAllMoviesWithGenre(page)
+                .distinctUntilChanged()
+                .map { Result.Success(it) },
             flow {
-                enumValues<MEDIACATEGORY>().forEach {
-                    emit(fetchTrendingMoviesFromNetwork(it))
-                }
-            }.filter { it !is NetworkResponseWrapper.Success }.map {
+                emit(fetchTrendingMoviesFromNetwork(mediaCategory, page))
+            }.filter {
+                it !is NetworkResponseWrapper.Success
+            }.map {
                 Result.Error(it)
             }
         )
     }
 
-    override suspend fun flowTvMediaFromDb(): Flow<Result<List<TvModelWithGenres>, NetworkResponseWrapper<TvMediaResponseContainer>>> {
+    override fun flowTvMediaFromDb(
+        tvMediaCategory: TVMEDIACATEGORY,
+        page: Int
+    ): Flow<Result<List<TvModelWithGenres>, NetworkResponseWrapper<TvMediaResponseContainer>>> {
         return merge(
             tvDao.fetchAllTvMediaWithGenre().distinctUntilChanged().map { Result.Success(it) },
             flow {
-                enumValues<TVMEDIACATEGORY>().forEach {
-                    emit(fetchTrendingTvFromNetwork(it))
-                }
+                emit(fetchTrendingTvFromNetwork(tvMediaCategory, page))
+
             }.filter { it !is NetworkResponseWrapper.Success }.map {
                 Result.Error(it)
             }
         )
     }
 
-
     private suspend fun fetchTrendingMoviesFromNetwork(
         mediaCategory: MEDIACATEGORY,
-        page: Int = 1
+        page: Int
     ): NetworkResponseWrapper<MediaResponseContainer> {
         return feedApiMapper.feedMovieMediaApiMapper.getOrDefault(
             mediaCategory
@@ -95,13 +107,13 @@ class HomeFeedsRepository @Inject constructor(
 
     private suspend fun fetchTrendingTvFromNetwork(
         mediaCategory: TVMEDIACATEGORY,
-        page: Int = 1
+        page: Int
     ): NetworkResponseWrapper<TvMediaResponseContainer> {
         return feedApiMapper.feedTvMediaApiMapper.getOrDefault(
             mediaCategory
         ) { trendingMoviesNetworkDataSource.fetchTrendingTv(it) }.invoke(page).also {
             if (it is NetworkResponseWrapper.Success) {
-                tvDao.saveAllTrendingTvMedia(it.body.tvModelList.map { mediaModel -> mediaModel.copy(page=page) })
+                tvDao.saveAllTrendingTvMedia(it.body.tvModelList.map { mediaModel -> mediaModel.copy(page = page) })
                 tvMediaCategoryDao.saveGenreIdsFromTvMedia(it.body.tvModelList.map { mediaModel ->
                     TvMediaIdMediaCategoryMapping(
                         mediaModel.id,
@@ -116,5 +128,6 @@ class HomeFeedsRepository @Inject constructor(
             }
         }
     }
+
 
 }

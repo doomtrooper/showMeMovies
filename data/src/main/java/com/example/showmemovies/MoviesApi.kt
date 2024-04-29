@@ -6,6 +6,7 @@ import com.example.showmemovies.models.MediaResponseContainer
 import com.example.showmemovies.models.TvGenreNameIdMappingContainer
 import com.example.showmemovies.models.TvMediaResponseContainer
 import retrofit2.http.GET
+import retrofit2.http.Query
 
 interface MoviesApi {
 
@@ -16,26 +17,26 @@ interface MoviesApi {
     suspend fun tvGenre(): NetworkResponseWrapper<TvGenreNameIdMappingContainer>
 
     @GET("3/trending/movie/day?language=en-US")
-    suspend fun trendingMovie(): NetworkResponseWrapper<MediaResponseContainer>
+    suspend fun trendingMovie(@Query("page") page: Int): NetworkResponseWrapper<MediaResponseContainer>
 
     @GET("3/trending/tv/day?language=en-US")
-    suspend fun trendingTv(): NetworkResponseWrapper<TvMediaResponseContainer>
+    suspend fun trendingTv(@Query("page") page: Int): NetworkResponseWrapper<TvMediaResponseContainer>
 
 
     @GET("3/movie/top_rated?language=en-US")
-    suspend fun topRatedMovie(): NetworkResponseWrapper<MediaResponseContainer>
+    suspend fun topRatedMovie(@Query("page") page: Int): NetworkResponseWrapper<MediaResponseContainer>
 
     @GET("3/tv/top_rated?language=en-US")
-    suspend fun topRatedTv(): NetworkResponseWrapper<TvMediaResponseContainer>
+    suspend fun topRatedTv(@Query("page") page: Int): NetworkResponseWrapper<TvMediaResponseContainer>
 
     @GET("3/movie/popular?language=en-US")
-    suspend fun popularMovie(): NetworkResponseWrapper<MediaResponseContainer>
+    suspend fun popularMovie(@Query("page") page: Int): NetworkResponseWrapper<MediaResponseContainer>
 
     @GET("3/tv/popular?language=en-US")
-    suspend fun popularTv(): NetworkResponseWrapper<TvMediaResponseContainer>
+    suspend fun popularTv(@Query("page") page: Int): NetworkResponseWrapper<TvMediaResponseContainer>
 
     @GET("3/movie/upcoming")
-    suspend fun fetchUpcomingMovies(): NetworkResponseWrapper<MediaResponseContainer>
+    suspend fun fetchUpcomingMovies(@Query("page") page: Int): NetworkResponseWrapper<MediaResponseContainer>
 
 
 }

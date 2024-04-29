@@ -22,6 +22,6 @@ interface TvDao {
     suspend fun deleteAll()
 
     @Transaction
-    @Query("SELECT * FROM tv_model")
-    fun fetchAllTvMediaWithGenre(): Flow<List<TvModelWithGenres>>
+    @Query("SELECT * FROM tv_model where page=:page")
+    fun fetchAllTvMediaWithGenre(page: Int = 1): Flow<List<TvModelWithGenres>>
 }

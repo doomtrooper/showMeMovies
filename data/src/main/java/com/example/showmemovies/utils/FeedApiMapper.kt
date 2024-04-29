@@ -7,6 +7,6 @@ import com.example.showmemovies.models.TvMediaResponseContainer
 import com.example.showmemovies.utils.NetworkResponseWrapper
 
 data class FeedApiMapper(
-    val feedMovieMediaApiMapper: Map<MEDIACATEGORY, suspend () -> NetworkResponseWrapper<MediaResponseContainer>>,
-    val feedTvMediaApiMapper: Map<TVMEDIACATEGORY, suspend () -> NetworkResponseWrapper<TvMediaResponseContainer>>
+    val feedMovieMediaApiMapper: Map<MEDIACATEGORY, suspend  (page: Int) -> NetworkResponseWrapper<MediaResponseContainer>>,
+    val feedTvMediaApiMapper: Map<TVMEDIACATEGORY, suspend (page: Int) -> NetworkResponseWrapper<TvMediaResponseContainer>>
 )

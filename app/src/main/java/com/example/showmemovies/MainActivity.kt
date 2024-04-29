@@ -33,15 +33,27 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.showmemovies.categorylist.MediaCategoryListViewModel
+import com.example.showmemovies.categorylist.MediaCategoryTabbedPage
+import com.example.showmemovies.homefeed.MovieHomePage
+import com.example.showmemovies.homefeed.MovieHomePageViewModel
+import com.example.showmemovies.locationservice.LocationForeGroundService
+import com.example.showmemovies.models.MEDIACATEGORY
+import com.example.showmemovies.models.TVMEDIACATEGORY
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+const val movieCategory: String = "movieCategory"
+const val tvCategory: String = "tvCategory"
 
 /*
 * Once Hilt is set up in your Application class and an application-level component is available,
@@ -118,7 +130,7 @@ class MainActivity : ComponentActivity() {
     private fun bindToLocationService() {
         if (mBound) {
             unbindService(serviceConnection)
-            mBound= false
+            mBound = false
         } else {
             Intent(this@MainActivity, LocationForeGroundService::class.java).also {
                 bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
@@ -141,7 +153,7 @@ class MainActivity : ComponentActivity() {
                     this@MainActivity.startService(intent)
                 }
             } else {
-                if(mBound){
+                if (mBound) {
                     unbindService(serviceConnection)
                     mBound = false
                 }
@@ -164,7 +176,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        if (mBound){
+        if (mBound) {
             unbindService(serviceConnection)
             mBound = false
         }
@@ -178,20 +190,50 @@ fun MyApp(paddingValues: PaddingValues) {
     val navController = rememberNavController()
     NavHost(
         navController,
-        startDestination = "movies",
+        startDestination = "home",
         modifier = Modifier.padding(paddingValues)
     ) {
-        homePage()
+        homePage() { mediaCategory, tvCategory -> navController.navigate("mediaTabbed/$mediaCategory/$tvCategory") }
+        mediaCategoryTabs()
     }
 }
 
-fun NavGraphBuilder.homePage() {
-    composable(route = "movies") {
+fun NavGraphBuilder.homePage(navigateToTabbedList: (mediaCategory: MEDIACATEGORY, tvCategory: TVMEDIACATEGORY) -> Unit) {
+    composable(route = "home") {
         val homePageViewModel: MovieHomePageViewModel = hiltViewModel<MovieHomePageViewModel>()
         val state by homePageViewModel.uiState.collectAsStateWithLifecycle(
             lifecycleOwner = LocalLifecycleOwner.current,
             minActiveState = Lifecycle.State.CREATED
         )
-        MovieHomePage(state)
+        MovieHomePage(state, navigateToTabbedList)
+    }
+}
+
+fun NavGraphBuilder.mediaCategoryTabs() {
+    composable(route = "mediaTabbed/{$movieCategory}/{$tvCategory}", arguments = listOf(
+        navArgument(movieCategory) {
+            type = NavType.StringType
+            defaultValue = MEDIACATEGORY.UPCOMING_MOVIE.name
+        },
+        navArgument(tvCategory) {
+            type = NavType.StringType
+            nullable = false
+            defaultValue = TVMEDIACATEGORY.POPULAR_TV.name
+        }
+    )) { backstack ->
+        val movieCategory =
+            MEDIACATEGORY.valueOf(
+                backstack.arguments?.getString(movieCategory) ?: MEDIACATEGORY.UPCOMING_MOVIE.name
+            )
+        val tvCategory =
+            TVMEDIACATEGORY.valueOf(
+                backstack.arguments?.getString(tvCategory) ?: TVMEDIACATEGORY.POPULAR_TV.name
+            )
+        val mediaCategoryListViewModel =
+            hiltViewModel<MediaCategoryListViewModel, MediaCategoryListViewModel.Factory>(
+                creationCallback = { factory -> factory.create(movieCategory, tvCategory) }
+            )
+        val state by mediaCategoryListViewModel.uiState.collectAsStateWithLifecycle()
+        MediaCategoryTabbedPage(state)
     }
 }

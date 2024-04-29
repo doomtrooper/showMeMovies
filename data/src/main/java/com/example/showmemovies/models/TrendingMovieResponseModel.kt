@@ -62,6 +62,9 @@ data class MediaModel(
     @SerializedName("vote_count")
     val voteCount: Long,
 
+    @ColumnInfo(name = "page")
+    val page: Int = 1,
+
 ) {
     @Ignore
     @SerializedName("genre_ids")

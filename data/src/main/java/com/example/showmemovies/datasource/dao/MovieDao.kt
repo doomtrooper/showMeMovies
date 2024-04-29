@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MovieDao {
-    @Query("SELECT * FROM media_model")
+    @Query("SELECT * FROM media_model ORDER BY page ASC")
     fun getAllTrendingMovies(): Flow<List<MediaModel>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -21,6 +21,6 @@ interface MovieDao {
     suspend fun deleteAll()
 
     @Transaction
-    @Query("SELECT * FROM media_model")
-    fun fetchAllMoviesWithGenre(): Flow<List<MovieModelWithGenres>>
+    @Query("SELECT * FROM media_model where page=:page")
+    fun fetchAllMoviesWithGenre(page: Int = 1): Flow<List<MovieModelWithGenres>>
 }

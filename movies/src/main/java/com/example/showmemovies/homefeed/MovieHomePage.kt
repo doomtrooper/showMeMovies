@@ -1,8 +1,9 @@
-package com.example.showmemovies
+package com.example.showmemovies.homefeed
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,13 +48,18 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Lifecycle.Event.ON_ANY
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
+import com.example.showmemovies.models.MEDIACATEGORY
 import com.example.showmemovies.models.MovieModelWithGenres
+import com.example.showmemovies.models.TVMEDIACATEGORY
 import com.example.showmemovies.models.TvModelWithGenres
 import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MovieHomePage(state: MovieHomePageUiState) {
+fun MovieHomePage(
+    state: MovieHomePageUiState,
+    navigateToTabbedList: (mediaCategory: MEDIACATEGORY, tvCategory: TVMEDIACATEGORY) -> Unit
+) {
     /*
     val lifeCycleEvent = rememberLifeCycleEvent()
     println("mutableLifeCycleEvent: ${lifeCycleEvent.value}")
@@ -75,7 +81,14 @@ fun MovieHomePage(state: MovieHomePageUiState) {
                     Text(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(10.dp),
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .clickable(enabled = true) {
+                                navigateToTabbedList(
+                                    MEDIACATEGORY.TRENDING_MOVIE,
+                                    TVMEDIACATEGORY.TRENDING_TV
+                                )
+                            },
                         text = "Upcoming Movies",
                         style = TextStyle(
                             brush = Brush.linearGradient(

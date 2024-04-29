@@ -1,8 +1,9 @@
-package com.example.showmemovies
+package com.example.showmemovies.homefeed
 
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.showmemovies.IODispatcher
 import com.example.showmemovies.models.MEDIACATEGORY.*
 import com.example.showmemovies.utils.NetworkResponseWrapper.*
 import com.example.showmemovies.models.MediaResponseContainer

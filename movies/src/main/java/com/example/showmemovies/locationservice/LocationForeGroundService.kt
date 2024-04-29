@@ -1,4 +1,4 @@
-package com.example.showmemovies
+package com.example.showmemovies.locationservice
 
 import android.Manifest
 import android.app.Notification

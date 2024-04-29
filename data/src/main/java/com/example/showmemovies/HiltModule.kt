@@ -23,7 +23,9 @@ import com.example.showmemovies.repository.HomeFeedsRepository
 import com.example.showmemovies.repository.GenreRepository
 import com.example.showmemovies.repository.IGenreRepository
 import com.example.showmemovies.repository.IHomeFeedsRepository
+import com.example.showmemovies.repository.IMediaListRepository
 import com.example.showmemovies.repository.ITvGenreRepository
+import com.example.showmemovies.repository.MediaListRepository
 import com.example.showmemovies.repository.TvGenreRepository
 import com.example.showmemovies.utils.FeedApiMapper
 import com.example.showmemovies.utils.NetworkResponseWrapperCallAdapterFactory
@@ -147,21 +149,17 @@ class HiltModule {
     @Provides
     fun provideFeedMovieMediaApiMapper(moviesApi: MoviesApi): FeedApiMapper {
         return FeedApiMapper(
-            enumValues<MEDIACATEGORY>().associateWith {
-                when (it) {
-                    MEDIACATEGORY.TRENDING_MOVIE -> suspend { moviesApi.trendingMovie() }
-                    MEDIACATEGORY.TOP_RATED_MOVIE -> suspend { moviesApi.popularMovie() }
-                    MEDIACATEGORY.POPULAR_MOVIE -> suspend { moviesApi.topRatedMovie() }
-                    MEDIACATEGORY.UPCOMING_MOVIE -> suspend { moviesApi.topRatedMovie() }
-                }
-            },
-            enumValues<TVMEDIACATEGORY>().associateWith {
-                when (it) {
-                    TVMEDIACATEGORY.TRENDING_TV -> suspend { moviesApi.trendingTv() }
-                    TVMEDIACATEGORY.POPULAR_TV -> suspend { moviesApi.popularTv() }
-                    TVMEDIACATEGORY.TOP_RATED_TV -> suspend { moviesApi.topRatedTv() }
-                }
-            }
+            mapOf(
+                MEDIACATEGORY.TRENDING_MOVIE to { moviesApi.trendingMovie(it) },
+                MEDIACATEGORY.TOP_RATED_MOVIE to { moviesApi.trendingMovie(it) },
+                MEDIACATEGORY.POPULAR_MOVIE to { moviesApi.trendingMovie(it) },
+                MEDIACATEGORY.UPCOMING_MOVIE to { moviesApi.trendingMovie(it) }
+            ),
+            mapOf(
+                TVMEDIACATEGORY.TRENDING_TV to { moviesApi.trendingTv(it) },
+                TVMEDIACATEGORY.POPULAR_TV to { moviesApi.popularTv(it) },
+                TVMEDIACATEGORY.TOP_RATED_TV to { moviesApi.topRatedTv(it) }
+            )
         )
     }
 
@@ -190,6 +188,29 @@ class HiltModule {
         feedApiMapper: FeedApiMapper,
     ): IHomeFeedsRepository =
         HomeFeedsRepository(
+            trendingDataSource,
+            movieDao,
+            tvDao,
+            mediaCategoryDao,
+            tvMediaCategoryDao,
+            movieIdGenreIdMappingDao,
+            tvIdGenreIdMappingDao,
+            feedApiMapper
+        )
+
+    @Singleton
+    @Provides
+    fun providesCategoryMediaListRepository(
+        trendingDataSource: ITendingMoviesNetworkDataSource,
+        movieDao: MovieDao,
+        tvDao: TvDao,
+        mediaCategoryDao: MediaCategoryDao,
+        tvMediaCategoryDao: TvMediaCategoryDao,
+        movieIdGenreIdMappingDao: MovieIdGenreIdMappingDao,
+        tvIdGenreIdMappingDao: TvIdGenreIdMappingDao,
+        feedApiMapper: FeedApiMapper,
+    ): IMediaListRepository =
+        MediaListRepository(
             trendingDataSource,
             movieDao,
             tvDao,

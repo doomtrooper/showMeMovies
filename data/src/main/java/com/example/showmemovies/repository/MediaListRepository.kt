@@ -28,14 +28,18 @@ import javax.inject.Inject
 
 interface IMediaListRepository {
     fun flowMoviesFromDb(
-        mediaCategory: MEDIACATEGORY,
-        page: Int = 1
+        mediaCategory: MEDIACATEGORY
     ): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>>
 
     fun flowTvMediaFromDb(
         tvMediaCategory: TVMEDIACATEGORY,
         page: Int = 1
     ): Flow<Result<List<TvModelWithGenres>, NetworkResponseWrapper<TvMediaResponseContainer>>>
+
+    suspend fun fetchTrendingMoviesFromNetwork(
+        mediaCategory: MEDIACATEGORY,
+        page: Int = 1
+    ): NetworkResponseWrapper<MediaResponseContainer>
 }
 
 class MediaListRepository @Inject constructor(
@@ -49,15 +53,24 @@ class MediaListRepository @Inject constructor(
     private val feedApiMapper: FeedApiMapper,
 ) : IMediaListRepository {
     override fun flowMoviesFromDb(
-        mediaCategory: MEDIACATEGORY,
-        page: Int
+        mediaCategory: MEDIACATEGORY
     ): Flow<Result<List<MovieModelWithGenres>, NetworkResponseWrapper<MediaResponseContainer>>> {
         return merge(
-            movieDao.fetchAllMoviesWithGenre(page)
+            movieDao.getAllMovies()
+                .map {
+                    it.filter { movieModelWithGenres ->
+                        movieModelWithGenres.mediaCategoryMapping.contains(
+                            MediaIdMediaCategoryMapping(
+                                movieId = movieModelWithGenres.mediaModel.id,
+                                category = mediaCategory
+                            )
+                        )
+                    }
+                }
                 .distinctUntilChanged()
                 .map { Result.Success(it) },
             flow {
-                emit(fetchTrendingMoviesFromNetwork(mediaCategory, page))
+                emit(fetchTrendingMoviesFromNetwork(mediaCategory))
             }.filter {
                 it !is NetworkResponseWrapper.Success
             }.map {
@@ -81,7 +94,7 @@ class MediaListRepository @Inject constructor(
         )
     }
 
-    private suspend fun fetchTrendingMoviesFromNetwork(
+    override suspend fun fetchTrendingMoviesFromNetwork(
         mediaCategory: MEDIACATEGORY,
         page: Int
     ): NetworkResponseWrapper<MediaResponseContainer> {
@@ -89,7 +102,11 @@ class MediaListRepository @Inject constructor(
             mediaCategory
         ) { trendingMoviesNetworkDataSource.fetchTrendingMovies(it) }.invoke(page).also {
             if (it is NetworkResponseWrapper.Success) {
-                movieDao.saveAllTrendingMovies(it.body.movieList.map { mediaModel -> mediaModel.copy(page=page) })
+                movieDao.saveAllTrendingMovies(it.body.movieList.map { mediaModel ->
+                    mediaModel.copy(
+                        page = page
+                    )
+                })
                 mediaCategoryDao.saveGenreIdsFromMovie(it.body.movieList.map { mediaModel ->
                     MediaIdMediaCategoryMapping(
                         mediaModel.id,
@@ -113,7 +130,11 @@ class MediaListRepository @Inject constructor(
             mediaCategory
         ) { trendingMoviesNetworkDataSource.fetchTrendingTv(it) }.invoke(page).also {
             if (it is NetworkResponseWrapper.Success) {
-                tvDao.saveAllTrendingTvMedia(it.body.tvModelList.map { mediaModel -> mediaModel.copy(page = page) })
+                tvDao.saveAllTrendingTvMedia(it.body.tvModelList.map { mediaModel ->
+                    mediaModel.copy(
+                        page = page
+                    )
+                })
                 tvMediaCategoryDao.saveGenreIdsFromTvMedia(it.body.tvModelList.map { mediaModel ->
                     TvMediaIdMediaCategoryMapping(
                         mediaModel.id,

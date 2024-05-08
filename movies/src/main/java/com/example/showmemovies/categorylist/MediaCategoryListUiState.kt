@@ -10,8 +10,8 @@ data class MediaCategoryListUiState(
     val tvMedia: List<TvModelWithGenres> = listOf(),
     val movieGenreIdMapping: Map<Long, String> = emptyMap(),
     val tvGenreIdMapping: Map<Long, String> = emptyMap(),
-    val loadingNextPageForMovieMedia: Boolean = false,
-    val loadingNextPageForTvMedia: Boolean = false,
     val loadingMovieMedia: Boolean = true,
-    val loadingTvMedia: Boolean = false
+    val loadingTvMedia: Boolean = true,
+    val errorMovieMedia: String = "",
+    val errorTvMedia: String = ""
 )

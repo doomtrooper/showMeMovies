@@ -234,6 +234,6 @@ fun NavGraphBuilder.mediaCategoryTabs() {
                 creationCallback = { factory -> factory.create(movieCategory, tvCategory) }
             )
         val state by mediaCategoryListViewModel.uiState.collectAsStateWithLifecycle()
-        MediaCategoryTabbedPage(state)
+        MediaCategoryTabbedPage(state) { mediaCategoryListViewModel.loadNextPage() }
     }
 }

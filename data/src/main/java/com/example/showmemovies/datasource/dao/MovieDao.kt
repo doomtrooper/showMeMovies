@@ -11,8 +11,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MovieDao {
+    @Transaction
     @Query("SELECT * FROM media_model ORDER BY page ASC")
-    fun getAllTrendingMovies(): Flow<List<MediaModel>>
+    fun getAllMovies(): Flow<List<MovieModelWithGenres>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveAllTrendingMovies(movies: List<MediaModel>)

@@ -1,15 +1,16 @@
 package com.example.showmemovies.categorylist
 
+import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.showmemovies.IODispatcher
 import com.example.showmemovies.models.MEDIACATEGORY
-import com.example.showmemovies.models.MovieModelWithGenres
+import com.example.showmemovies.models.MediaResponseContainer
 import com.example.showmemovies.models.TVMEDIACATEGORY
 import com.example.showmemovies.repository.IGenreRepository
-import com.example.showmemovies.repository.IHomeFeedsRepository
 import com.example.showmemovies.repository.IMediaListRepository
 import com.example.showmemovies.repository.ITvGenreRepository
+import com.example.showmemovies.utils.NetworkResponseWrapper
 import com.example.showmemovies.utils.Result
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -39,18 +40,70 @@ class MediaCategoryListViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun observeMedia(repository: IMediaListRepository) {
-        repository.flowMoviesFromDb(movieCategory).collect { result ->
+    private suspend fun observeMedia(mediaListRepository: IMediaListRepository) {
+        mediaListRepository.flowMoviesFromDb(movieCategory).collect { result ->
             when (result) {
                 is Result.Success -> {
                     uiState.update {
                         uiState.value.copy(
-                            movieMedia = result.body
+                            movieMedia = result.body,
+                            loadingMovieMedia = false,
+                            movieMediaLastPageIndex = result.body.last().mediaModel.page
                         )
                     }
                 }
-                else -> {}
+
+                is Result.Error -> setNetworkResponseInUiState(result.body)
             }
+        }
+    }
+
+    fun loadNextPage() {
+        viewModelScope.launch(dispatcher) {
+            uiState.update {
+                uiState.value.copy(
+                    loadingMovieMedia = true
+                )
+            }.also {
+                val networkResponseWrapper =
+                    mediaListRepository.fetchTrendingMoviesFromNetwork(
+                        movieCategory,
+                        uiState.value.movieMediaLastPageIndex + 1
+                    )
+                setNetworkResponseInUiState(networkResponseWrapper)
+            }
+        }
+    }
+
+    @MainThread
+    private fun setNetworkResponseInUiState(
+        errorResponse: NetworkResponseWrapper<MediaResponseContainer>,
+    ) {
+        when (errorResponse) {
+            is NetworkResponseWrapper.NetworkError -> uiState.update {
+                uiState.value.copy(
+                    loadingMovieMedia = false,
+                    errorMovieMedia = errorResponse.t?.localizedMessage
+                        ?: "Something went wrong"
+                )
+            }
+
+            is NetworkResponseWrapper.ServiceError -> uiState.update {
+                uiState.value.copy(
+                    loadingMovieMedia = false,
+                    errorMovieMedia = errorResponse.errorBody.statusMessage
+                )
+            }
+
+            is NetworkResponseWrapper.UnknownError -> uiState.update {
+                uiState.value.copy(
+                    loadingMovieMedia = false,
+                    errorMovieMedia = errorResponse.t?.localizedMessage
+                        ?: "Something went wrong"
+                )
+            }
+
+            else -> {}
         }
     }
 
@@ -60,10 +113,12 @@ class MediaCategoryListViewModel @AssistedInject constructor(
                 is Result.Success -> {
                     uiState.update {
                         uiState.value.copy(
-                            tvMedia = result.body
+                            tvMedia = result.body,
+                            loadingTvMedia = false
                         )
                     }
                 }
+
                 else -> {}
             }
         }

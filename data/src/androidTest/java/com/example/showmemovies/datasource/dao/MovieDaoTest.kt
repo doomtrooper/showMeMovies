@@ -91,7 +91,7 @@ class MovieDaoTest {
     @Throws(Exception::class)
     fun emitEmptyListWhenDataIsClearedFromDb() = runBlocking {
         movieDao.saveAllTrendingMovies(listOf(movieModel))
-        movieDao.getAllTrendingMovies().test {
+        movieDao.getAllMovies().test {
             val result: List<MediaModel> = awaitItem()
             assert(result.isNotEmpty())
             movieDao.deleteAll()

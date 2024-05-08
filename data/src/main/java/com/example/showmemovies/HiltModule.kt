@@ -151,9 +151,9 @@ class HiltModule {
         return FeedApiMapper(
             mapOf(
                 MEDIACATEGORY.TRENDING_MOVIE to { moviesApi.trendingMovie(it) },
-                MEDIACATEGORY.TOP_RATED_MOVIE to { moviesApi.trendingMovie(it) },
-                MEDIACATEGORY.POPULAR_MOVIE to { moviesApi.trendingMovie(it) },
-                MEDIACATEGORY.UPCOMING_MOVIE to { moviesApi.trendingMovie(it) }
+                MEDIACATEGORY.TOP_RATED_MOVIE to { moviesApi.topRatedMovie(it) },
+                MEDIACATEGORY.POPULAR_MOVIE to { moviesApi.popularMovie(it) },
+                MEDIACATEGORY.UPCOMING_MOVIE to { moviesApi.fetchUpcomingMovies(it) }
             ),
             mapOf(
                 TVMEDIACATEGORY.TRENDING_TV to { moviesApi.trendingTv(it) },

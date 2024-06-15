@@ -48,6 +48,30 @@ class CoroutineUnitTest {
             println(firstCoroutine)
             println(secondCoroutine)
         }
+
+    }
+
+
+    @Test
+    fun test5() = runBlocking {
+
+        launch {
+
+            println("in sub coroutine ${Thread.currentThread().name}")
+        }
+        println("before coroutine in main ${Thread.currentThread().name}")
+        withContext(Dispatchers.Unconfined) {
+            println("hello from coroutine ${Thread.currentThread().name}")
+            someDelay(5000)
+            println("hello from coutoutine after delay ${Thread.currentThread().name}")
+        }
+        println("after coroutine in main ${Thread.currentThread().name}")
+    }
+
+    private suspend fun someDelay(delay: Long){
+        println("someDelay started")
+        delay(delay)
+        println("someDelay finished")
     }
 
     @Test

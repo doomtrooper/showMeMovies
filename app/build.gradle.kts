@@ -74,6 +74,7 @@ dependencies {
     testImplementation(TestLibs.jUnit)
     androidTestImplementation(TestLibs.andoridXTestJunit)
 
+    androidTestImplementation(TestLibs.androidXTestRunner)
     //hilt
     implementation(Libs.Google.Hilt.Android)
     ksp(Libs.Google.Hilt.Compiler)

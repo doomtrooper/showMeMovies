@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +49,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Lifecycle.Event.ON_ANY
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
+import com.example.showmemovies.PicassoView
 import com.example.showmemovies.models.MEDIACATEGORY
 import com.example.showmemovies.models.MovieModelWithGenres
 import com.example.showmemovies.models.TVMEDIACATEGORY
@@ -289,12 +291,12 @@ private fun MediaCard(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(150.dp)
+                        .aspectRatio(0.6f)
                 ) {
-                    AsyncImage(
+                    PicassoView(
+                        modifier = Modifier.fillMaxWidth().background(Magenta),
                         model = "https://image.tmdb.org/t/p/w500/" + movieModelWithGenres.mediaModel.posterPath,
                         contentDescription = movieModelWithGenres.mediaModel.title,
-                        contentScale = ContentScale.FillWidth
                     )
                 }
                 Box(modifier = Modifier.padding(4.dp)) {
@@ -325,12 +327,12 @@ private fun TvMediaCard(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(150.dp)
+                        .aspectRatio(0.6f)
                 ) {
-                    AsyncImage(
+                    PicassoView(
+                        modifier = Modifier.fillMaxWidth().background(Magenta),
                         model = "https://image.tmdb.org/t/p/w500/" + tvModelWithGenres.mediaModel.posterPath,
                         contentDescription = tvModelWithGenres.mediaModel.title,
-                        contentScale = ContentScale.FillWidth
                     )
                 }
                 Box(modifier = Modifier.padding(4.dp)) {
@@ -377,13 +379,13 @@ private fun MovieCard(
                     fraction = 1f - pageOffset.coerceIn(0f, 1f)
                 )
             }
-            .height(200.dp),
+            .aspectRatio(1.5f),
         elevation = 10.dp
     ) {
-        AsyncImage(
+        PicassoView(
+            modifier = Modifier.fillMaxWidth().background(Magenta),
             model = "https://image.tmdb.org/t/p/w500/" + movieModelWithGenres.mediaModel.posterPath,
             contentDescription = movieModelWithGenres.mediaModel.title,
-            contentScale = ContentScale.FillWidth
         )
         Box(
             modifier = Modifier

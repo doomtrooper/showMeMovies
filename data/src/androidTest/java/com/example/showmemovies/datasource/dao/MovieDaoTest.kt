@@ -92,10 +92,10 @@ class MovieDaoTest {
     fun emitEmptyListWhenDataIsClearedFromDb() = runBlocking {
         movieDao.saveAllTrendingMovies(listOf(movieModel))
         movieDao.getAllMovies().test {
-            val result: List<MediaModel> = awaitItem()
+            val result: List<MovieModelWithGenres> = awaitItem()
             assert(result.isNotEmpty())
             movieDao.deleteAll()
-            val result2: List<MediaModel> = awaitItem()
+            val result2: List<MovieModelWithGenres> = awaitItem()
             assert(result2.isEmpty())
         }
     }

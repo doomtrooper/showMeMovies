@@ -26,3 +26,4 @@ include(":app")
 include(":movies")
 include(":data")
 
+include(":composePicasso")
